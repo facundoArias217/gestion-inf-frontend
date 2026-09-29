@@ -8,17 +8,17 @@ Frontend del sistema de gestión interna para una tienda de productos informáti
 
 - **React 19 + Vite** (ES modules), JavaScript/JSX, ESLint.
 - **Tailwind CSS + shadcn/ui** para estilos y componentes base. Identidad de marca: violeta 600 (`--primary`/`--ring`), gradiente de marca (`--brand-from`/`--brand-to`) y tokens `--chart-1..5` en `src/index.css`.
-- Dev: `npm run dev`. Build/verificación: `npm run build` y `npm run lint`. Pendiente instalar: `react-router-dom`.
+- Dev: `npm run dev`. Build/verificación: `npm run build` y `npm run lint`.
 
 ## Estructura
 
 ```
 src/
-├── app/             (router.jsx: rutas + guards por rol; providers.jsx: Auth + contexto global)
+├── app/             (router.jsx: rutas + guards.jsx: ProtectedRoute/RequireRole por rol; providers.jsx: Auth + contexto global)
 ├── assets/          (imágenes/íconos)
 ├── config/          (integration.js: set de módulos integrados a la API real)
 ├── components/      (UI compartida: tabla, modal, botones, formularios)
-├── context/         (auth-context.jsx: sesión, usuario y rol ADMIN/VENDEDOR)
+├── context/         (auth-context.js: AuthContext; auth-context.jsx: AuthProvider con sesión, usuario y rol ADMIN/VENDEDOR)
 ├── hooks/           (use-auth.js)
 ├── layouts/         (dashboard-layout.jsx: shell del panel con menú por rol)
 ├── lib/             (api.js: cliente HTTP; format.js: fechas y moneda)
@@ -60,7 +60,7 @@ Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (comp
 ## Reglas para trabajar acá
 
 - Estructura **por features**: al agregar pantallas o funcionalidades, crear dentro de `src/features/<modulo>/`, no carpetas de tipo archivo globales.
-- Roles según el BRD: dashboard, productos, categorías, proveedores, compras y usuarios → Administrador; clientes, presupuestos, armados, ventas y pagos → Vendedor (el admin puede todo). Los guards por rol se resuelven en `src/app/router.jsx` con `useAuth`.
+- Roles según el BRD: dashboard, proveedores, compras y usuarios → Administrador; clientes, presupuestos, armados (Armá tu PC), ventas y pagos → Vendedor; productos y categorías → ambos roles (el Vendedor en solo-lectura para armar ventas, el Administrador gestiona). Los guards por rol se resuelven en `src/app/guards.jsx` con `useAuth`.
 - No commitear secretos; las variables de entorno se leen con `import.meta.env` (referencia: `VITE_API_URL`).
 - Antes de entregar: correr `npm run lint` y `npm run build`.
 - Ramas feature (`fe/<modulo>`) con merge directo a `dev`, y luego `dev` a `main` (sin PRs). Base actual del prototipo: `prototipo-front`.
