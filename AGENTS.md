@@ -7,6 +7,7 @@ Frontend del sistema de gestión interna para una tienda de productos informáti
 ## Stack
 
 - **React 19 + Vite** (ES modules), JavaScript/JSX, ESLint.
+- **Tailwind CSS + shadcn/ui** para estilos y componentes base. Identidad de marca: violeta 600 (`--primary`/`--ring`), gradiente de marca (`--brand-from`/`--brand-to`) y tokens `--chart-1..5` en `src/index.css`.
 - Dev: `npm run dev`. Build/verificación: `npm run build` y `npm run lint`. Pendiente instalar: `react-router-dom`.
 
 ## Estructura
@@ -15,6 +16,7 @@ Frontend del sistema de gestión interna para una tienda de productos informáti
 src/
 ├── app/             (router.jsx: rutas + guards por rol; providers.jsx: Auth + contexto global)
 ├── assets/          (imágenes/íconos)
+├── config/          (integration.js: set de módulos integrados a la API real)
 ├── components/      (UI compartida: tabla, modal, botones, formularios)
 ├── context/         (auth-context.jsx: sesión, usuario y rol ADMIN/VENDEDOR)
 ├── hooks/           (use-auth.js)
@@ -41,9 +43,19 @@ Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (comp
 
 - Componentes como funciones con hooks; un componente por archivo, export default.
 - Estado local con `useState`; sesión y rol en `auth-context.jsx` (consumir con el hook `useAuth`).
+- Formularios con `react-hook-form` + `zod` (componente `form` de shadcn/ui); los tokens de estilos viven en `src/index.css` y los componentes de shadcn en `src/components/ui/` (no editar salvo para extender variantes, ej. `StatusBadge`).
 - Llamadas HTTP solo desde los `services.js` de cada feature, siempre a través del cliente de `src/lib/api.js`; nunca usar `fetch` directo en componentes.
 - Formateo de fechas/moneda con `src/lib/format.js`.
 - Sin comentarios innecesarios; nombres de módulos en español (producto, presupuesto), técnico en inglés (pages, services, hooks).
+
+## Migración mock → API (por módulo)
+
+- Cada `features/<modulo>/services.js` decide en runtime con `isIntegrated('<modulo>')` (desde `src/config/integration.js`): si el módulo está integrado llama a la API, si no responde con los datos mock de `features/<modulo>/mocks.js`.
+- `isIntegrated` valida el nombre contra la lista de módulos válidos y lanza un error si es desconocido, para que un typo no deje el módulo en mock silenciosamente.
+- El Set de módulos integrados arranca **vacío**: ningún módulo va contra la API real hasta que el backend la exponga.
+- Integrar un módulo = agregarlo al Set de `integration.js` (una línea, en el commit de su tarjeta de Integración). Los `mocks.js` **se conservan** después de integrar: sirven para demos offline; no se eliminan al integrar.
+- Al completar la migración de los 12 módulos, evaluar eliminar la indirección (`integration.js` y ramas mock) en un commit final.
+- Los mocks respetan el contrato de API (shapes y status codes): ver la skill `reglas-de-negocio` del repo backend y el contrato de la colección Postman.
 
 ## Reglas para trabajar acá
 
@@ -51,4 +63,4 @@ Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (comp
 - Roles según el BRD: dashboard, productos, categorías, proveedores, compras y usuarios → Administrador; clientes, presupuestos, armados, ventas y pagos → Vendedor (el admin puede todo). Los guards por rol se resuelven en `src/app/router.jsx` con `useAuth`.
 - No commitear secretos; las variables de entorno se leen con `import.meta.env` (referencia: `VITE_API_URL`).
 - Antes de entregar: correr `npm run lint` y `npm run build`.
-- Trabajar sobre la rama `estructura-carpetas` (o la vigente).
+- Ramas feature (`fe/<modulo>`) con merge directo a `dev`, y luego `dev` a `main` (sin PRs). Base actual del prototipo: `prototipo-front`.
