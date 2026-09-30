@@ -36,3 +36,13 @@ export async function login(credentials) {
   }
   return loginMock(credentials)
 }
+
+export async function me(token) {
+  if (isIntegrated('auth')) {
+    const respuesta = await api.get('/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return respuesta.data ?? respuesta
+  }
+  return null
+}

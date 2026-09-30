@@ -52,7 +52,7 @@ Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (comp
 
 - Cada `features/<modulo>/services.js` decide en runtime con `isIntegrated('<modulo>')` (desde `src/config/integration.js`): si el módulo está integrado llama a la API, si no responde con los datos mock de `features/<modulo>/mocks.js`.
 - `isIntegrated` valida el nombre contra la lista de módulos válidos y lanza un error si es desconocido, para que un typo no deje el módulo en mock silenciosamente.
-- El Set de módulos integrados arranca **vacío**: ningún módulo va contra la API real hasta que el backend la exponga.
+- El Set de módulos integrados arranca **vacío**: ningún módulo va contra la API real hasta que el backend la exponga. `auth` quedó integrado en su tarjeta 1.3 (login y `/me` con JWT real); el resto se agrega en el commit de su tarjeta de Integración.
 - Integrar un módulo = agregarlo al Set de `integration.js` (una línea, en el commit de su tarjeta de Integración). Los `mocks.js` **se conservan** después de integrar: sirven para demos offline; no se eliminan al integrar.
 - Al completar la migración de los 12 módulos, evaluar eliminar la indirección (`integration.js` y ramas mock) en un commit final.
 - Los mocks respetan el contrato de API (shapes y status codes): ver la skill `reglas-de-negocio` del repo backend y el contrato de la colección Postman.

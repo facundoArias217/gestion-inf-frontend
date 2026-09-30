@@ -1,6 +1,8 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { AuthContext } from './auth-context.js'
+import { me } from '../features/auth/services'
+import { setToken } from '../lib/api'
+import { AuthContext } from './auth-context'
 
 const CLAVE_SESION = 'gestion-inf-session'
 
@@ -13,6 +15,10 @@ function leerSesion() {
   }
 }
 
+function guardarSesion(sesion) {
+  localStorage.setItem(CLAVE_SESION, JSON.stringify(sesion))
+}
+
 export function AuthProvider({ children }) {
   const [sesion, setSesion] = useState(leerSesion)
   const [bienvenida, setBienvenida] = useState(null)
@@ -20,15 +26,48 @@ export function AuthProvider({ children }) {
   const login = useCallback((usuario, token) => {
     const nueva = { usuario, token }
     setSesion(nueva)
-    localStorage.setItem(CLAVE_SESION, JSON.stringify(nueva))
+    guardarSesion(nueva)
+    setToken(token)
     setBienvenida(usuario.nombre)
   }, [])
-
-  const limpiarBienvenida = useCallback(() => setBienvenida(null), [])
 
   const logout = useCallback(() => {
     setSesion(null)
     localStorage.removeItem(CLAVE_SESION)
+    setToken(null)
+  }, [])
+
+  const limpiarBienvenida = useCallback(() => setBienvenida(null), [])
+
+  useEffect(() => {
+    if (!sesion?.token) {
+      return
+    }
+    setToken(sesion.token)
+
+    let cancelado = false
+    me(sesion.token)
+      .then((usuario) => {
+        if (cancelado || !usuario) {
+          return
+        }
+        const nueva = { usuario, token: sesion.token }
+        setSesion(nueva)
+        guardarSesion(nueva)
+      })
+      .catch(() => {
+        if (cancelado) {
+          return
+        }
+        setToken(null)
+        setSesion(null)
+        localStorage.removeItem(CLAVE_SESION)
+      })
+
+    return () => {
+      cancelado = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const value = useMemo(() => {
