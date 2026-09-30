@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import PlaceholderPage from '../components/placeholder-page'
 import { useAuth } from '../hooks/use-auth'
 import LoginPage from '../features/auth/pages/login-page'
+import CategoriasPage from '../features/categorias/pages/categorias-page'
 import { ProtectedRoute, RequireRole } from './guards'
 import DashboardLayout from '../layouts/dashboard-layout'
 
@@ -52,7 +53,11 @@ export default function Router() {
           <Route path="productos" element={<PlaceholderAmbos titulo="Productos" />} />
           <Route
             path="categorias"
-            element={<PlaceholderAmbos titulo="Categorías" />}
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <CategoriasPage />
+              </RequireRole>
+            }
           />
           <Route path="proveedores" element={<PlaceholderAdmin titulo="Proveedores" />} />
           <Route path="compras" element={<PlaceholderAdmin titulo="Compras" />} />
