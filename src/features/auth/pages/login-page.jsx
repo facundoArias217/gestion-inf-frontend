@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
@@ -31,7 +30,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Toaster } from '@/components/ui/sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { login as loginRequest } from '../services'
 
@@ -82,7 +80,6 @@ function LoginPage() {
     try {
       const { usuario, token } = await loginRequest(values)
       login(usuario, token)
-      toast.success(`Bienvenido, ${usuario.nombre}`)
       navigate(location.state?.from || '/', { replace: true })
     } catch (error) {
       form.setError('password', { message: error.message })
@@ -155,7 +152,6 @@ function LoginPage() {
           </p>
         </CardContent>
       </Card>
-      <Toaster />
     </div>
   )
 }

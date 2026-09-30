@@ -15,12 +15,16 @@ function leerSesion() {
 
 export function AuthProvider({ children }) {
   const [sesion, setSesion] = useState(leerSesion)
+  const [bienvenida, setBienvenida] = useState(null)
 
   const login = useCallback((usuario, token) => {
     const nueva = { usuario, token }
     setSesion(nueva)
     localStorage.setItem(CLAVE_SESION, JSON.stringify(nueva))
+    setBienvenida(usuario.nombre)
   }, [])
+
+  const limpiarBienvenida = useCallback(() => setBienvenida(null), [])
 
   const logout = useCallback(() => {
     setSesion(null)
@@ -32,12 +36,14 @@ export function AuthProvider({ children }) {
     return {
       usuario: sesion?.usuario ?? null,
       token: sesion?.token ?? null,
+      bienvenida,
       login,
       logout,
+      limpiarBienvenida,
       isAdmin: rol === 'ADMIN',
       isVendedor: rol === 'VENDEDOR',
     }
-  }, [sesion, login, logout])
+  }, [sesion, bienvenida, login, logout, limpiarBienvenida])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

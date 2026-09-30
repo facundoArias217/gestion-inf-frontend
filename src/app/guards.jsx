@@ -19,6 +19,7 @@ function Redirigir({ destino, mensaje }) {
   const navigate = useNavigate()
 
   useEffect(() => {
+    toast.dismiss()
     if (mensaje) {
       toast.warning(mensaje)
     }

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
   ChevronDown,
   Cpu,
@@ -138,6 +139,7 @@ function Navbar({ onAbrirMenu }) {
   const iniciales = `${usuario.nombre[0]}${usuario.apellido[0]}`.toUpperCase()
 
   const cerrarSesion = () => {
+    toast.dismiss()
     logout()
     navigate('/login', { replace: true })
   }
@@ -193,6 +195,16 @@ function Navbar({ onAbrirMenu }) {
 
 function DashboardLayout() {
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const { bienvenida, limpiarBienvenida } = useAuth()
+  const saludoMostrado = useRef(false)
+
+  useEffect(() => {
+    if (bienvenida && !saludoMostrado.current) {
+      saludoMostrado.current = true
+      toast.success(`Bienvenido, ${bienvenida}`, { duration: 5000 })
+      limpiarBienvenida()
+    }
+  }, [bienvenida, limpiarBienvenida])
 
   return (
     <div className="flex min-h-svh bg-muted/40">
