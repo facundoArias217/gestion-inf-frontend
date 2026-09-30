@@ -44,6 +44,7 @@ Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (comp
 - Componentes como funciones con hooks; un componente por archivo, export default.
 - Estado local con `useState`; sesión y rol en `auth-context.jsx` (consumir con el hook `useAuth`).
 - Formularios con `react-hook-form` + `zod` (componente `form` de shadcn/ui); los tokens de estilos viven en `src/index.css` y los componentes de shadcn en `src/components/ui/` (no editar salvo para extender variantes, ej. `StatusBadge`).
+- **UI de ABMs (decisión de la tarjeta 2.1, no re-decidir por módulo):** los ABMs simples de catálogo (categorías, clientes, proveedores, productos, usuarios) se resuelven en **modal Dialog**; las operaciones con detalle multi-item o flujos complejos (compras, ventas, presupuestos, armados) usan **página propia**.
 - Llamadas HTTP solo desde los `services.js` de cada feature, siempre a través del cliente de `src/lib/api.js`; nunca usar `fetch` directo en componentes.
 - Formateo de fechas/moneda con `src/lib/format.js`.
 - Sin comentarios innecesarios; nombres de módulos en español (producto, presupuesto), técnico en inglés (pages, services, hooks).
