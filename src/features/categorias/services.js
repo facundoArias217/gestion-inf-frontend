@@ -71,16 +71,13 @@ function actualizarMock(id, datos) {
   return conLatencia(categoria)
 }
 
-function bajaMock(id) {
+function cambiarEstadoMock(id, activo) {
   const categoria = categorias.find((c) => c.id === id)
   if (!categoria) {
     return errorConLatencia('Categoría no encontrada')
   }
-  if (!categoria.activo) {
-    return errorConLatencia('La categoría ya está dada de baja')
-  }
 
-  categoria.activo = false
+  categoria.activo = activo
   categoria.updatedAt = new Date().toISOString()
   return conLatencia(categoria)
 }
@@ -111,8 +108,20 @@ export async function actualizarCategoria(id, datos) {
 
 export async function bajarCategoria(id) {
   if (isIntegrated('categorias')) {
-    await api.delete(`/categorias/${id}`)
-    return null
+    const respuesta = await api.patch(`/categorias/${id}/estado`, {
+      activo: false,
+    })
+    return respuesta.data ?? respuesta
   }
-  return bajaMock(id)
+  return cambiarEstadoMock(id, false)
+}
+
+export async function reactivarCategoria(id) {
+  if (isIntegrated('categorias')) {
+    const respuesta = await api.patch(`/categorias/${id}/estado`, {
+      activo: true,
+    })
+    return respuesta.data ?? respuesta
+  }
+  return cambiarEstadoMock(id, true)
 }

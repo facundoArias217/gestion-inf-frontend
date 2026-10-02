@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Archive, MoreHorizontal, Pencil, Plus } from 'lucide-react'
+import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 
+import OrdenSelect from '@/components/orden-select'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,14 +29,15 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
+import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import BajaCategoriaDialog from '../components/baja-categoria-dialog'
 import CategoriaFormDialog from '../components/categoria-form-dialog'
-import { listarCategorias } from '../services'
+import { listarCategorias, reactivarCategoria } from '../services'
 
 const FILTROS = [
   { valor: 'todas', label: 'Todas' },
   { valor: 'activas', label: 'Activas' },
-  { valor: 'inactivas', label: 'Inactivas' },
+  { valor: 'historico', label: 'Histórico' },
 ]
 
 function CategoriasPage() {
@@ -46,6 +48,7 @@ function CategoriasPage() {
   const [formAbierto, setFormAbierto] = useState(false)
   const [categoriaEditando, setCategoriaEditando] = useState(null)
   const [categoriaBaja, setCategoriaBaja] = useState(null)
+  const [orden, setOrden] = useOrden('categorias')
 
   const recargarCategorias = useCallback(() => {
     listarCategorias()
@@ -81,14 +84,18 @@ function CategoriasPage() {
   }, [])
 
   const filtradas = useMemo(() => {
-    if (filtro === 'activas') {
-      return categorias.filter((categoria) => categoria.activo)
-    }
-    if (filtro === 'inactivas') {
-      return categorias.filter((categoria) => !categoria.activo)
-    }
-    return categorias
-  }, [categorias, filtro])
+    const filtradasPorEstado = (() => {
+      if (filtro === 'activas') {
+        return categorias.filter((categoria) => categoria.activo)
+      }
+      if (filtro === 'historico') {
+        return categorias.filter((categoria) => !categoria.activo)
+      }
+      return categorias
+    })()
+
+    return ordenarListado(filtradasPorEstado, orden)
+  }, [categorias, filtro, orden])
 
   const abrirAlta = () => {
     setCategoriaEditando(null)
@@ -98,6 +105,16 @@ function CategoriasPage() {
   const abrirEdicion = (categoria) => {
     setCategoriaEditando(categoria)
     setFormAbierto(true)
+  }
+
+  const reactivar = async (categoria) => {
+    try {
+      await reactivarCategoria(categoria.id)
+      toast.success(`Categoría «${categoria.nombre}» reactivada`)
+      recargarCategorias()
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
 
   return (
@@ -122,15 +139,18 @@ function CategoriasPage() {
           )}
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Tabs value={filtro} onValueChange={setFiltro}>
-            <TabsList>
-              {FILTROS.map((filtroDef) => (
-                <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
-                  {filtroDef.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Tabs value={filtro} onValueChange={setFiltro}>
+              <TabsList>
+                {FILTROS.map((filtroDef) => (
+                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                    {filtroDef.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+            <OrdenSelect orden={orden} onOrdenChange={setOrden} />
+          </div>
 
           <Table>
             <TableHeader>
@@ -194,13 +214,20 @@ function CategoriasPage() {
                               <Pencil className="size-4" />
                               Editar
                             </DropdownMenuItem>
-                            {categoria.activo && (
+                            {categoria.activo ? (
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
                                 onClick={() => setCategoriaBaja(categoria)}
                               >
                                 <Archive className="size-4" />
                                 Dar de baja
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => reactivar(categoria)}
+                              >
+                                <RotateCcw className="size-4" />
+                                Reactivar
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
