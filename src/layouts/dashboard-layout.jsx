@@ -82,7 +82,7 @@ function Sidebar({ abierto, onCerrar }) {
     <aside
       className={`${
         abierto ? 'flex' : 'hidden'
-      } fixed inset-y-0 left-0 z-40 w-60 flex-col border-r bg-card md:static md:flex`}
+      } fixed inset-y-0 left-0 z-40 w-60 flex-col border-r bg-card lg:static lg:flex`}
     >
       <div className="flex items-center gap-2 border-b px-4 py-4">
         <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-brand-from to-brand-to text-sm font-bold text-white">
@@ -94,7 +94,7 @@ function Sidebar({ abierto, onCerrar }) {
         <Button
           variant="ghost"
           size="sm"
-          className="ml-auto md:hidden"
+          className="ml-auto lg:hidden"
           onClick={onCerrar}
         >
           <X />
@@ -149,7 +149,7 @@ function Navbar({ onAbrirMenu }) {
       <Button
         variant="ghost"
         size="sm"
-        className="md:hidden"
+        className="lg:hidden"
         onClick={onAbrirMenu}
       >
         <Menu />
@@ -211,7 +211,7 @@ function DashboardLayout() {
       <Sidebar abierto={menuAbierto} onCerrar={() => setMenuAbierto(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Navbar onAbrirMenu={() => setMenuAbierto(true)} />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

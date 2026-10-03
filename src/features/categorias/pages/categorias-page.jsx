@@ -120,7 +120,7 @@ function CategoriasPage() {
   return (
     <div className="grid gap-4">
       <Card>
-        <CardHeader className="flex-row items-start justify-between gap-4">
+        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
           <div className="grid gap-1.5">
             <CardTitle className="text-xl font-semibold tracking-tight">
               Categorías
@@ -156,7 +156,7 @@ function CategoriasPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Descripción</TableHead>
+                <TableHead className="hidden lg:table-cell">Descripción</TableHead>
                 <TableHead>Estado</TableHead>
                 {isAdmin && (
                   <TableHead className="w-12 text-right">Acciones</TableHead>
@@ -187,7 +187,7 @@ function CategoriasPage() {
                     <TableCell className="font-medium">
                       {categoria.nombre}
                     </TableCell>
-                    <TableCell className="max-w-sm text-muted-foreground">
+                    <TableCell className="hidden max-w-sm text-muted-foreground lg:table-cell">
                       {categoria.descripcion || '—'}
                     </TableCell>
                     <TableCell>

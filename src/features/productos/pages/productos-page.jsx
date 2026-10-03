@@ -167,7 +167,7 @@ function ProductosPage() {
   return (
     <div className="grid gap-4">
       <Card>
-        <CardHeader className="flex-row items-start justify-between gap-4">
+        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
           <div className="grid gap-1.5">
             <CardTitle className="text-xl font-semibold tracking-tight">
               Productos
@@ -198,7 +198,10 @@ function ProductosPage() {
             </Tabs>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
-                <SelectTrigger className="w-44" aria-label="Filtrar por categoría">
+                <SelectTrigger
+                  className="w-full sm:w-44"
+                  aria-label="Filtrar por categoría"
+                >
                   <SelectValue placeholder="Categoría" />
                 </SelectTrigger>
                 <SelectContent>
@@ -222,8 +225,8 @@ function ProductosPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Marca</TableHead>
-                <TableHead>Categoría</TableHead>
+                <TableHead className="hidden lg:table-cell">Marca</TableHead>
+                <TableHead className="hidden lg:table-cell">Categoría</TableHead>
                 <TableHead>Precio</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Estado</TableHead>
@@ -256,10 +259,10 @@ function ProductosPage() {
                     <TableCell className="font-medium">
                       {producto.nombre}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">
                       {producto.marca}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">
                       {categoriasPorId.get(producto.categoriaId)?.nombre ??
                         '—'}
                     </TableCell>
