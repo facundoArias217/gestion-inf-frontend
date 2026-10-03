@@ -1,0 +1,352 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw } from 'lucide-react'
+import { toast } from 'sonner'
+
+import OrdenSelect from '@/components/orden-select'
+import StatusBadge from '@/components/status-badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { listarCategorias } from '@/features/categorias/services'
+import { useAuth } from '@/hooks/use-auth'
+import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { formatCurrency } from '@/lib/format'
+import BajaProductoDialog from '../components/baja-producto-dialog'
+import ProductoFormDialog from '../components/producto-form-dialog'
+import { listarProductos, reactivarProducto } from '../services'
+
+const FILTROS = [
+  { valor: 'todas', label: 'Todas' },
+  { valor: 'activas', label: 'Activas' },
+  { valor: 'historico', label: 'Histórico' },
+]
+
+const ORDENES_PRODUCTOS = [
+  { valor: 'nombre-asc', label: 'Nombre A-Z' },
+  { valor: 'nombre-desc', label: 'Nombre Z-A' },
+  { valor: 'fecha-asc', label: 'Más antiguos primero' },
+  { valor: 'fecha-desc', label: 'Más nuevos primero' },
+  { valor: 'precio-asc', label: 'Menor precio primero' },
+  { valor: 'precio-desc', label: 'Mayor precio primero' },
+  { valor: 'stock-asc', label: 'Menos stock primero' },
+  { valor: 'stock-desc', label: 'Más stock primero' },
+]
+
+function ProductosPage() {
+  const { isAdmin } = useAuth()
+  const [productos, setProductos] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [filtro, setFiltro] = useState('todas')
+  const [categoriaFiltro, setCategoriaFiltro] = useState('todas')
+  const [orden, setOrden] = useOrden('productos')
+  const [formAbierto, setFormAbierto] = useState(false)
+  const [productoEditando, setProductoEditando] = useState(null)
+  const [productoBaja, setProductoBaja] = useState(null)
+
+  const recargarProductos = useCallback(() => {
+    listarProductos()
+      .then((datos) => setProductos(datos))
+      .catch((error) =>
+        toast.error(error.message ?? 'No se pudieron cargar los productos'),
+      )
+  }, [])
+
+  useEffect(() => {
+    let cancelado = false
+
+    listarProductos()
+      .then((datos) => {
+        if (!cancelado) {
+          setProductos(datos)
+        }
+      })
+      .catch((error) => {
+        if (!cancelado) {
+          toast.error(error.message ?? 'No se pudieron cargar los productos')
+        }
+      })
+      .finally(() => {
+        if (!cancelado) {
+          setCargando(false)
+        }
+      })
+
+    listarCategorias()
+      .then((datos) => {
+        if (!cancelado) {
+          setCategorias(datos)
+        }
+      })
+      .catch((error) => {
+        if (!cancelado) {
+          toast.error(error.message ?? 'No se pudieron cargar las categorías')
+        }
+      })
+
+    return () => {
+      cancelado = true
+    }
+  }, [])
+
+  const categoriasPorId = useMemo(() => {
+    const mapa = new Map()
+    categorias.forEach((categoria) => mapa.set(categoria.id, categoria))
+    return mapa
+  }, [categorias])
+
+  const filtrados = useMemo(() => {
+    const porEstado = productos.filter((producto) => {
+      if (filtro === 'activas') {
+        return producto.activo
+      }
+      if (filtro === 'historico') {
+        return !producto.activo
+      }
+      return true
+    })
+
+    const porCategoria =
+      categoriaFiltro === 'todas'
+        ? porEstado
+        : porEstado.filter(
+            (producto) => String(producto.categoriaId) === categoriaFiltro,
+          )
+
+    return ordenarListado(porCategoria, orden)
+  }, [productos, filtro, categoriaFiltro, orden])
+
+  const abrirAlta = () => {
+    setProductoEditando(null)
+    setFormAbierto(true)
+  }
+
+  const abrirEdicion = (producto) => {
+    setProductoEditando(producto)
+    setFormAbierto(true)
+  }
+
+  const reactivar = async (producto) => {
+    try {
+      await reactivarProducto(producto.id)
+      toast.success(`Producto «${producto.nombre}» reactivado`)
+      recargarProductos()
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+  return (
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
+          <div className="grid gap-1.5">
+            <CardTitle className="text-xl font-semibold tracking-tight">
+              Productos
+            </CardTitle>
+            <CardDescription>
+              {isAdmin
+                ? 'Catálogo centralizado de la tienda: productos sueltos y componentes para armados.'
+                : 'Consulta del catálogo en modo solo-lectura (RN-USR-03).'}
+            </CardDescription>
+          </div>
+          {isAdmin && (
+            <Button onClick={abrirAlta}>
+              <Plus className="size-4" />
+              Nuevo producto
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Tabs value={filtro} onValueChange={setFiltro}>
+              <TabsList>
+                {FILTROS.map((filtroDef) => (
+                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                    {filtroDef.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
+                <SelectTrigger
+                  className="w-full sm:w-44"
+                  aria-label="Filtrar por categoría"
+                >
+                  <SelectValue placeholder="Categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas las categorías</SelectItem>
+                  {categorias.map((categoria) => (
+                    <SelectItem key={categoria.id} value={String(categoria.id)}>
+                      {categoria.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <OrdenSelect
+                orden={orden}
+                onOrdenChange={setOrden}
+                opciones={ORDENES_PRODUCTOS}
+              />
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead className="hidden lg:table-cell">Marca</TableHead>
+                <TableHead className="hidden lg:table-cell">Categoría</TableHead>
+                <TableHead>Precio</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Estado</TableHead>
+                {isAdmin && (
+                  <TableHead className="w-12 text-right">Acciones</TableHead>
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {cargando ? (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell colSpan={isAdmin ? 7 : 6}>
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filtrados.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={isAdmin ? 7 : 6}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    No hay productos para este filtro.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtrados.map((producto) => (
+                  <TableRow key={producto.id}>
+                    <TableCell className="font-medium">
+                      {producto.nombre}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">
+                      {producto.marca}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground lg:table-cell">
+                      {categoriasPorId.get(producto.categoriaId)?.nombre ??
+                        '—'}
+                    </TableCell>
+                    <TableCell>{formatCurrency(producto.precio)}</TableCell>
+                    <TableCell
+                      className={
+                        producto.stock === 0
+                          ? 'font-medium text-destructive'
+                          : undefined
+                      }
+                    >
+                      {producto.stock === 0 ? 'Sin stock' : producto.stock}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        status={producto.activo ? 'ACTIVO' : 'INACTIVO'}
+                      />
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Acciones de ${producto.nombre}`}
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => abrirEdicion(producto)}
+                            >
+                              <Pencil className="size-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            {producto.activo ? (
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => setProductoBaja(producto)}
+                              >
+                                <Archive className="size-4" />
+                                Dar de baja
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => reactivar(producto)}
+                              >
+                                <RotateCcw className="size-4" />
+                                Reactivar
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <ProductoFormDialog
+        open={formAbierto}
+        onOpenChange={setFormAbierto}
+        producto={productoEditando}
+        categorias={categorias}
+        onGuardado={recargarProductos}
+      />
+      <BajaProductoDialog
+        open={productoBaja != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setProductoBaja(null)
+          }
+        }}
+        producto={productoBaja}
+        onBajaConfirmada={recargarProductos}
+      />
+    </div>
+  )
+}
+
+export default ProductosPage

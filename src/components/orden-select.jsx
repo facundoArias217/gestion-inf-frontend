@@ -18,7 +18,7 @@ const OPCIONES = [
 function OrdenSelect({ orden, onOrdenChange, opciones = OPCIONES }) {
   return (
     <Select value={orden} onValueChange={onOrdenChange}>
-      <SelectTrigger className="w-48" aria-label="Ordenar por">
+      <SelectTrigger className="w-full sm:w-48" aria-label="Ordenar por">
         <ArrowDownUp className="size-4 shrink-0 text-muted-foreground" />
         <SelectValue placeholder="Ordenar por" />
       </SelectTrigger>
