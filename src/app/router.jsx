@@ -4,6 +4,7 @@ import PlaceholderPage from '../components/placeholder-page'
 import { useAuth } from '../hooks/use-auth'
 import LoginPage from '../features/auth/pages/login-page'
 import CategoriasPage from '../features/categorias/pages/categorias-page'
+import ClientesPage from '../features/clientes/pages/clientes-page'
 import ProductosPage from '../features/productos/pages/productos-page'
 import { ProtectedRoute, RequireRole } from './guards'
 import DashboardLayout from '../layouts/dashboard-layout'
@@ -50,7 +51,14 @@ export default function Router() {
           />
           <Route path="armados" element={<PlaceholderAmbos titulo="Armá tu PC" />} />
           <Route path="pagos" element={<PlaceholderAmbos titulo="Pagos" />} />
-          <Route path="clientes" element={<PlaceholderAmbos titulo="Clientes" />} />
+          <Route
+            path="clientes"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <ClientesPage />
+              </RequireRole>
+            }
+          />
           <Route
             path="productos"
             element={

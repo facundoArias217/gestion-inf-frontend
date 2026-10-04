@@ -35,9 +35,9 @@ export function useOrden(modulo, ordenInicial = 'nombre-asc') {
   return [orden, setOrden];
 }
 
-function compararNombre(a, b) {
-  return String(a.nombre ?? '').localeCompare(
-    String(b.nombre ?? ''),
+function compararTexto(a, b, campo) {
+  return String(a[campo] ?? '').localeCompare(
+    String(b[campo] ?? ''),
     'es',
     { sensitivity: 'base' },
   );
@@ -59,18 +59,30 @@ function compararId(a, b) {
   return (a.id ?? 0) - (b.id ?? 0);
 }
 
-const COMPARADORES = {
-  'nombre-asc': (a, b) => compararNombre(a, b) || compararId(a, b),
-  'nombre-desc': (a, b) => compararNombre(b, a) || compararId(a, b),
-  'fecha-asc': (a, b) => compararFecha(a, b) || compararId(a, b),
-  'fecha-desc': (a, b) => compararFecha(b, a) || compararId(a, b),
-  'precio-asc': (a, b) => compararPrecio(a, b) || compararId(a, b),
-  'precio-desc': (a, b) => compararPrecio(b, a) || compararId(a, b),
-  'stock-asc': (a, b) => compararStock(a, b) || compararId(a, b),
-  'stock-desc': (a, b) => compararStock(b, a) || compararId(a, b),
-};
+function comparadorPara(orden, campoNombre) {
+  const compararNombre = (a, b) => compararTexto(a, b, campoNombre);
 
-export function ordenarListado(listado, orden) {
-  const comparador = COMPARADORES[orden] ?? COMPARADORES['nombre-asc'];
+  switch (orden) {
+    case 'nombre-desc':
+      return (a, b) => compararNombre(b, a) || compararId(a, b);
+    case 'fecha-asc':
+      return (a, b) => compararFecha(a, b) || compararId(a, b);
+    case 'fecha-desc':
+      return (a, b) => compararFecha(b, a) || compararId(a, b);
+    case 'precio-asc':
+      return (a, b) => compararPrecio(a, b) || compararId(a, b);
+    case 'precio-desc':
+      return (a, b) => compararPrecio(b, a) || compararId(a, b);
+    case 'stock-asc':
+      return (a, b) => compararStock(a, b) || compararId(a, b);
+    case 'stock-desc':
+      return (a, b) => compararStock(b, a) || compararId(a, b);
+    default:
+      return (a, b) => compararNombre(a, b) || compararId(a, b);
+  }
+}
+
+export function ordenarListado(listado, orden, { campoNombre = 'nombre' } = {}) {
+  const comparador = comparadorPara(orden, campoNombre);
   return [...listado].sort(comparador);
 }
