@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Eye, Plus } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Ban, CheckCircle2, Eye, MoreHorizontal, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -13,6 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -22,12 +28,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarProveedores } from '@/features/proveedores/services'
 import { listarProductos } from '@/features/productos/services'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { formatCurrency } from '@/lib/format'
+import CancelarCompraDialog from '../components/cancelar-compra-dialog'
 import CompraDetalleDialog from '../components/compra-detalle-dialog'
+import ConfirmarCompraDialog from '../components/confirmar-compra-dialog'
 import { listarCompras } from '../services'
+
+const FILTROS = [
+  { valor: 'todas', label: 'Todas' },
+  { valor: 'PENDIENTE', label: 'Pendientes' },
+  { valor: 'COMPLETADA', label: 'Completadas' },
+  { valor: 'CANCELADA', label: 'Canceladas' },
+]
 
 const ORDENES_COMPRAS = [
   { valor: 'fecha-desc', label: 'Más recientes primero' },
@@ -46,8 +62,19 @@ function ComprasPage() {
   const [proveedores, setProveedores] = useState([])
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [filtro, setFiltro] = useState('todas')
   const [orden, setOrden] = useOrden('compras', 'fecha-desc')
   const [compraDetalle, setCompraDetalle] = useState(null)
+  const [compraConfirmar, setCompraConfirmar] = useState(null)
+  const [compraCancelar, setCompraCancelar] = useState(null)
+
+  const recargarCompras = useCallback(() => {
+    listarCompras()
+      .then((datos) => setCompras(datos))
+      .catch((error) =>
+        toast.error(error.message ?? 'No se pudieron cargar las compras'),
+      )
+  }, [])
 
   useEffect(() => {
     let cancelado = false
@@ -96,10 +123,16 @@ function ComprasPage() {
     return mapa
   }, [proveedores])
 
-  const ordenadas = useMemo(
-    () => ordenarListado(compras, orden),
-    [compras, orden],
-  )
+  const ordenadas = useMemo(() => {
+    const porEstado = compras.filter((compra) => {
+      if (filtro === 'todas') {
+        return true
+      }
+      return compra.estado === filtro
+    })
+
+    return ordenarListado(porEstado, orden)
+  }, [compras, filtro, orden])
 
   return (
     <div className="grid gap-4">
@@ -120,7 +153,16 @@ function ComprasPage() {
           </Button>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Tabs value={filtro} onValueChange={setFiltro}>
+              <TabsList>
+                {FILTROS.map((filtroDef) => (
+                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                    {filtroDef.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
             <OrdenSelect
               orden={orden}
               onOrdenChange={setOrden}
@@ -136,7 +178,7 @@ function ComprasPage() {
                 <TableHead className="text-right">Ítems</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="w-12 text-right">Detalle</TableHead>
+                <TableHead className="w-24 text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -175,14 +217,44 @@ function ComprasPage() {
                       <StatusBadge status={compra.estado} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Ver detalle de la compra ${compra.id}`}
-                        onClick={() => setCompraDetalle(compra)}
-                      >
-                        <Eye className="size-4" />
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Ver detalle de la compra ${compra.id}`}
+                          onClick={() => setCompraDetalle(compra)}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        {compra.estado === 'PENDIENTE' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Acciones de la compra ${compra.id}`}
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => setCompraConfirmar(compra)}
+                              >
+                                <CheckCircle2 className="size-4" />
+                                Confirmar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => setCompraCancelar(compra)}
+                              >
+                                <Ban className="size-4" />
+                                Cancelar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -201,6 +273,26 @@ function ComprasPage() {
         }}
         compra={compraDetalle}
         productos={productos}
+      />
+      <ConfirmarCompraDialog
+        open={compraConfirmar != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setCompraConfirmar(null)
+          }
+        }}
+        compra={compraConfirmar}
+        onConfirmada={recargarCompras}
+      />
+      <CancelarCompraDialog
+        open={compraCancelar != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setCompraCancelar(null)
+          }
+        }}
+        compra={compraCancelar}
+        onCancelada={recargarCompras}
       />
     </div>
   )

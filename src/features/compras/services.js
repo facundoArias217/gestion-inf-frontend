@@ -69,6 +69,22 @@ async function crearMock({ proveedorId, fecha, detalles }) {
   return conLatencia(nueva)
 }
 
+function cambiarEstadoMock(id, estado) {
+  const compra = compras.find((c) => c.id === id)
+  if (!compra) {
+    return errorConLatencia('Compra no encontrada')
+  }
+  if (compra.estado !== 'PENDIENTE') {
+    return errorConLatencia(
+      'Solo se puede confirmar o cancelar una compra PENDIENTE',
+    )
+  }
+
+  compra.estado = estado
+  compra.updatedAt = new Date().toISOString()
+  return conLatencia(compra)
+}
+
 export async function listarCompras() {
   if (isIntegrated('compras')) {
     const respuesta = await api.get('/compras')
@@ -83,4 +99,24 @@ export async function crearCompra({ proveedorId, fecha, detalles }) {
     return respuesta.data ?? respuesta
   }
   return crearMock({ proveedorId, fecha, detalles })
+}
+
+export async function confirmarCompra(id) {
+  if (isIntegrated('compras')) {
+    const respuesta = await api.patch(`/compras/${id}/estado`, {
+      estado: 'COMPLETADA',
+    })
+    return respuesta.data ?? respuesta
+  }
+  return cambiarEstadoMock(id, 'COMPLETADA')
+}
+
+export async function cancelarCompra(id) {
+  if (isIntegrated('compras')) {
+    const respuesta = await api.patch(`/compras/${id}/estado`, {
+      estado: 'CANCELADA',
+    })
+    return respuesta.data ?? respuesta
+  }
+  return cambiarEstadoMock(id, 'CANCELADA')
 }
