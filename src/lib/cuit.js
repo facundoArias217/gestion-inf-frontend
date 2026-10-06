@@ -1,14 +1,17 @@
 const PESOS = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-const PREFIJOS_PERSONA = ['20', '23', '24', '27'];
 
-export function validarCuit(cuit) {
+export const PREFIJOS_PERSONA = ['20', '23', '24', '27'];
+export const PREFIJOS_EMPRESA = ['30', '33', '34'];
+export const PREFIJOS_TODOS = [...PREFIJOS_PERSONA, ...PREFIJOS_EMPRESA];
+
+export function validarCuit(cuit, prefijos = PREFIJOS_PERSONA) {
   const digitos = String(cuit ?? '');
 
   if (!/^\d{11}$/.test(digitos)) {
     return false;
   }
 
-  if (!PREFIJOS_PERSONA.includes(digitos.slice(0, 2))) {
+  if (!prefijos.includes(digitos.slice(0, 2))) {
     return false;
   }
 

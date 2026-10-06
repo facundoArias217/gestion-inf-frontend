@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import CuitInput from '@/components/cuit-input'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,23 +23,20 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import CuitInput from '@/components/cuit-input'
-import { validarCuit } from '@/lib/cuit'
-import { actualizarCliente, crearCliente } from '../services'
+import { PREFIJOS_TODOS, validarCuit } from '@/lib/cuit'
+import { actualizarProveedor, crearProveedor } from '../services'
 
-const clienteSchema = z.object({
-  nombre: z
+const proveedorSchema = z.object({
+  razonSocial: z
     .string()
-    .min(1, 'El nombre es obligatorio')
-    .max(50, 'Máximo 50 caracteres'),
-  apellido: z
-    .string()
-    .min(1, 'El apellido es obligatorio')
-    .max(50, 'Máximo 50 caracteres'),
-  cuil: z
+    .min(1, 'La razón social es obligatoria')
+    .max(100, 'Máximo 100 caracteres'),
+  cuit: z
     .string()
     .min(1, 'El CUIT/CUIL es obligatorio')
-    .refine(validarCuit, 'El CUIT/CUIL es inválido'),
+    .refine((valor) => validarCuit(valor, PREFIJOS_TODOS), {
+      message: 'El CUIT/CUIL es inválido',
+    }),
   email: z
     .string()
     .min(1, 'El email es obligatorio')
@@ -54,15 +52,14 @@ const clienteSchema = z.object({
     .max(100, 'Máximo 100 caracteres'),
 })
 
-function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
-  const esEdicion = cliente != null
+function ProveedorFormDialog({ open, onOpenChange, proveedor, onGuardado }) {
+  const esEdicion = proveedor != null
 
   const form = useForm({
-    resolver: zodResolver(clienteSchema),
+    resolver: zodResolver(proveedorSchema),
     defaultValues: {
-      nombre: '',
-      apellido: '',
-      cuil: '',
+      razonSocial: '',
+      cuit: '',
       email: '',
       telefono: '',
       direccion: '',
@@ -72,36 +69,34 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
   useEffect(() => {
     if (open) {
       form.reset({
-        nombre: cliente?.nombre ?? '',
-        apellido: cliente?.apellido ?? '',
-        cuil: cliente?.cuil ?? '',
-        email: cliente?.email ?? '',
-        telefono: cliente?.telefono ?? '',
-        direccion: cliente?.direccion ?? '',
+        razonSocial: proveedor?.razonSocial ?? '',
+        cuit: proveedor?.cuit ?? '',
+        email: proveedor?.email ?? '',
+        telefono: proveedor?.telefono ?? '',
+        direccion: proveedor?.direccion ?? '',
       })
     }
-  }, [open, cliente, form])
+  }, [open, proveedor, form])
 
   const onSubmit = async (values) => {
     const datos = {
-      nombre: values.nombre.trim(),
-      apellido: values.apellido.trim(),
-      cuil: values.cuil.trim(),
+      razonSocial: values.razonSocial.trim(),
+      cuit: values.cuit.trim(),
       email: values.email.trim(),
       telefono: values.telefono.trim(),
       direccion: values.direccion.trim(),
     }
 
     try {
-      const clienteGuardado = esEdicion
-        ? await actualizarCliente(cliente.id, datos)
-        : await crearCliente(datos)
+      const proveedorGuardado = esEdicion
+        ? await actualizarProveedor(proveedor.id, datos)
+        : await crearProveedor(datos)
 
-      toast.success(esEdicion ? 'Cliente actualizado' : 'Cliente creado')
+      toast.success(esEdicion ? 'Proveedor actualizado' : 'Proveedor creado')
       onOpenChange(false)
-      onGuardado?.(clienteGuardado)
+      onGuardado?.(proveedorGuardado)
     } catch (error) {
-      form.setError('cuil', { message: error.message })
+      form.setError('cuit', { message: error.message })
     }
   }
 
@@ -110,12 +105,12 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {esEdicion ? 'Editar cliente' : 'Nuevo cliente'}
+            {esEdicion ? 'Editar proveedor' : 'Nuevo proveedor'}
           </DialogTitle>
           <DialogDescription>
             {esEdicion
-              ? 'Modificá los datos del cliente.'
-              : 'Los clientes se asocian a presupuestos y ventas.'}
+              ? 'Modificá los datos del proveedor.'
+              : 'Los proveedores son el origen de las compras de la tienda.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -124,37 +119,22 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
             className="grid gap-4"
             noValidate
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="nombre"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre</FormLabel>
-                    <FormControl>
-                      <Input placeholder="María" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="apellido"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Apellido</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Gómez" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             <FormField
               control={form.control}
-              name="cuil"
+              name="razonSocial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Razón social</FormLabel>
+                  <FormControl>
+                    <Input placeholder="MayoristaTech SRL" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cuit"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>CUIT/CUIL</FormLabel>
@@ -177,7 +157,7 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="cliente@email.com"
+                      placeholder="ventas@proveedor.com"
                       {...field}
                     />
                   </FormControl>
@@ -232,4 +212,4 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
   )
 }
 
-export default ClienteFormDialog
+export default ProveedorFormDialog

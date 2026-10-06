@@ -6,6 +6,7 @@ import LoginPage from '../features/auth/pages/login-page'
 import CategoriasPage from '../features/categorias/pages/categorias-page'
 import ClientesPage from '../features/clientes/pages/clientes-page'
 import ProductosPage from '../features/productos/pages/productos-page'
+import ProveedoresPage from '../features/proveedores/pages/proveedores-page'
 import { ProtectedRoute, RequireRole } from './guards'
 import DashboardLayout from '../layouts/dashboard-layout'
 
@@ -75,7 +76,14 @@ export default function Router() {
               </RequireRole>
             }
           />
-          <Route path="proveedores" element={<PlaceholderAdmin titulo="Proveedores" />} />
+          <Route
+            path="proveedores"
+            element={
+              <RequireRole roles={['ADMIN']}>
+                <ProveedoresPage />
+              </RequireRole>
+            }
+          />
           <Route path="compras" element={<PlaceholderAdmin titulo="Compras" />} />
           <Route path="usuarios" element={<PlaceholderAdmin titulo="Usuarios" />} />
         </Route>
