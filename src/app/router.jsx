@@ -5,6 +5,8 @@ import { useAuth } from '../hooks/use-auth'
 import LoginPage from '../features/auth/pages/login-page'
 import CategoriasPage from '../features/categorias/pages/categorias-page'
 import ClientesPage from '../features/clientes/pages/clientes-page'
+import ComprasPage from '../features/compras/pages/compras-page'
+import CompraRegistroPage from '../features/compras/pages/compra-registro-page'
 import ProductosPage from '../features/productos/pages/productos-page'
 import ProveedoresPage from '../features/proveedores/pages/proveedores-page'
 import { ProtectedRoute, RequireRole } from './guards'
@@ -84,7 +86,22 @@ export default function Router() {
               </RequireRole>
             }
           />
-          <Route path="compras" element={<PlaceholderAdmin titulo="Compras" />} />
+          <Route
+            path="compras"
+            element={
+              <RequireRole roles={['ADMIN']}>
+                <ComprasPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="compras/nueva"
+            element={
+              <RequireRole roles={['ADMIN']}>
+                <CompraRegistroPage />
+              </RequireRole>
+            }
+          />
           <Route path="usuarios" element={<PlaceholderAdmin titulo="Usuarios" />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
