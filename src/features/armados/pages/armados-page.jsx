@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Eye, Pencil, Plus } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  CheckCircle2,
+  Eye,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -13,6 +19,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -29,6 +41,7 @@ import { listarProductos } from '@/features/productos/services'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { formatCurrency } from '@/lib/format'
 import ArmadoDetalleDialog from '../components/armado-detalle-dialog'
+import FinalizarArmadoDialog from '../components/finalizar-armado-dialog'
 import { listarArmados } from '../services'
 
 const FILTROS = [
@@ -59,6 +72,15 @@ function ArmadosPage() {
   const [filtro, setFiltro] = useState('todas')
   const [orden, setOrden] = useOrden('armados', 'fecha-desc')
   const [armadoDetalle, setArmadoDetalle] = useState(null)
+  const [armadoFinalizar, setArmadoFinalizar] = useState(null)
+
+  const recargarArmados = useCallback(() => {
+    listarArmados()
+      .then((datos) => setArmados(datos))
+      .catch((error) =>
+        toast.error(error.message ?? 'No se pudieron cargar los armados'),
+      )
+  }, [])
 
   useEffect(() => {
     let cancelado = false
@@ -228,16 +250,33 @@ function ArmadosPage() {
                           <Eye className="size-4" />
                         </Button>
                         {armado.estado === 'BORRADOR' && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Editar ${armado.nombre}`}
-                            onClick={() =>
-                              navigate(`/armados/${armado.id}/editar`)
-                            }
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Acciones de ${armado.nombre}`}
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate(`/armados/${armado.id}/editar`)
+                                }
+                              >
+                                <Pencil className="size-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setArmadoFinalizar(armado)}
+                              >
+                                <CheckCircle2 className="size-4" />
+                                Finalizar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </div>
                     </TableCell>
@@ -259,6 +298,18 @@ function ArmadosPage() {
         armado={armadoDetalle}
         productos={productos}
         categorias={categorias}
+      />
+      <FinalizarArmadoDialog
+        open={armadoFinalizar != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setArmadoFinalizar(null)
+          }
+        }}
+        armado={armadoFinalizar}
+        productos={productos}
+        categorias={categorias}
+        onFinalizado={recargarArmados}
       />
     </div>
   )

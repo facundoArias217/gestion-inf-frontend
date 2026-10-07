@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  Plus,
+  Trash2,
+  XCircle,
+} from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -20,22 +27,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  CATEGORIAS_OBLIGATORIAS_NOMBRES,
+  obtenerAdvertencias,
+} from '../compatibilidad'
+import { listarCategorias } from '@/features/categorias/services'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { formatCurrency } from '@/lib/format'
-import {
-  listarCategorias,
-} from '@/features/categorias/services'
 import { actualizarArmado, crearArmado, listarArmados } from '../services'
-
-const CATEGORIAS_OBLIGATORIAS_NOMBRES = [
-  'Procesador',
-  'Motherboard',
-  'Memoria RAM',
-  'Almacenamiento',
-  'Fuente',
-  'Gabinete',
-]
 
 const SIN_SELECCION = 'sin-seleccion'
 
@@ -222,6 +222,40 @@ function ArmadoFormPage() {
     const cantidad = slot.cantidad ?? 0
     return acum + (producto ? producto.precio * cantidad : 0)
   }, 0)
+
+  const completitud = useMemo(
+    () =>
+      CATEGORIAS_OBLIGATORIAS_NOMBRES.map((nombreCategoria) => {
+        const categoria = categorias.find(
+          (c) => c.nombre === nombreCategoria,
+        )
+        const presente =
+          categoria != null &&
+          slots.some(
+            (slot) =>
+              slot.categoriaId === categoria.id && slot.productoId != null,
+          )
+        return { nombre: nombreCategoria, presente }
+      }),
+    [categorias, slots],
+  )
+
+  const advertencias = useMemo(() => {
+    if (cargando || productos.length === 0 || categorias.length === 0) {
+      return []
+    }
+
+    return obtenerAdvertencias(
+      slots
+        .filter((slot) => slot.productoId != null)
+        .map((slot) => ({
+          productoId: slot.productoId,
+          cantidad: slot.cantidad,
+        })),
+      productos,
+      categorias,
+    )
+  }, [cargando, slots, productos, categorias])
 
   const actualizarSlot = (indice, cambios) => {
     setSlots((previos) =>
@@ -512,7 +546,47 @@ function ArmadoFormPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="grid gap-2 rounded-lg border p-3">
+                <p className="text-sm font-medium">Validación en vivo</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {completitud.map((item) => (
+                    <p
+                      key={item.nombre}
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                    >
+                      {item.presente ? (
+                        <CheckCircle2 className="size-4 text-green-600" />
+                      ) : (
+                        <XCircle className="size-4 text-destructive" />
+                      )}
+                      {item.nombre}
+                    </p>
+                  ))}
+                </div>
+                {advertencias.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Sin advertencias por ahora.
+                  </p>
+                ) : (
+                  <ul className="grid gap-1">
+                    {advertencias.map((advertencia) => (
+                      <li
+                        key={advertencia}
+                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                      >
+                        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+                        {advertencia}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Las advertencias son informativas y no impiden guardar
+                  (RN-ARM-02). La completitud se exige al finalizar.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-semibold">
                 Total:{' '}
                 <span className="text-base">{formatCurrency(total)}</span>

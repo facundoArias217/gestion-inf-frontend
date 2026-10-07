@@ -1,6 +1,8 @@
 import { api } from '../../lib/api'
 import { isIntegrated } from '../../config/integration'
 import { ARMADOS_MOCK } from './mocks'
+import { categoriasFaltantes } from './compatibilidad'
+import { listarCategorias } from '../categorias/services'
 import { listarClientes } from '../clientes/services'
 import { listarProductos } from '../productos/services'
 
@@ -158,6 +160,31 @@ async function actualizarMock(id, datos) {
   return conLatencia(armado)
 }
 
+async function finalizarMock(id) {
+  const armado = armados.find((a) => a.id === id)
+  if (!armado) {
+    return errorConLatencia('Armado no encontrado')
+  }
+  if (armado.estado !== 'BORRADOR') {
+    return errorConLatencia('Solo se puede finalizar un armado en BORRADOR')
+  }
+
+  const [productos, categorias] = await Promise.all([
+    listarProductos(),
+    listarCategorias(),
+  ])
+  const faltantes = categoriasFaltantes(armado.componentes, productos, categorias)
+  if (faltantes.length > 0) {
+    return errorConLatencia(
+      `El armado no está completo: faltan ${faltantes.join(', ')}`,
+    )
+  }
+
+  armado.estado = 'FINALIZADO'
+  armado.updatedAt = new Date().toISOString()
+  return conLatencia(armado)
+}
+
 export async function listarArmados() {
   if (isIntegrated('armados')) {
     const respuesta = await api.get('/armados')
@@ -180,4 +207,14 @@ export async function actualizarArmado(id, datos) {
     return respuesta.data ?? respuesta
   }
   return actualizarMock(id, datos)
+}
+
+export async function finalizarArmado(id) {
+  if (isIntegrated('armados')) {
+    const respuesta = await api.patch(`/armados/${id}/estado`, {
+      estado: 'FINALIZADO',
+    })
+    return respuesta.data ?? respuesta
+  }
+  return finalizarMock(id)
 }
