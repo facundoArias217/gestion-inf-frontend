@@ -9,6 +9,8 @@ import ComprasPage from '../features/compras/pages/compras-page'
 import CompraRegistroPage from '../features/compras/pages/compra-registro-page'
 import ProductosPage from '../features/productos/pages/productos-page'
 import ProveedoresPage from '../features/proveedores/pages/proveedores-page'
+import VentasPage from '../features/ventas/pages/ventas-page'
+import VentaRegistroPage from '../features/ventas/pages/venta-registro-page'
 import { ProtectedRoute, RequireRole } from './guards'
 import DashboardLayout from '../layouts/dashboard-layout'
 
@@ -47,7 +49,22 @@ export default function Router() {
         >
           <Route index element={<InicioRedirect />} />
           <Route path="dashboard" element={<PlaceholderAdmin titulo="Dashboard" />} />
-          <Route path="ventas" element={<PlaceholderAmbos titulo="Ventas" />} />
+          <Route
+            path="ventas"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <VentasPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="ventas/nueva"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <VentaRegistroPage />
+              </RequireRole>
+            }
+          />
           <Route
             path="presupuestos"
             element={<PlaceholderAmbos titulo="Presupuestos" />}
