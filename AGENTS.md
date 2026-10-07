@@ -67,4 +67,5 @@ Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (comp
 - No commitear secretos; las variables de entorno se leen con `import.meta.env` (referencia: `VITE_API_URL`).
 - Antes de entregar: correr `npm run lint` y `npm run build`.
 - **Informe de ejecución por tarjeta:** cada tarjeta [FE-mock]/[Int] ejecutada incluye un `docs/informe-<tarjeta>.md` con: tarjeta, fecha, alcance, decisiones tomadas, verificación, checklist manual. El informe va en el mismo commit de la tarjeta. No incluir flujo git en el informe.
+- **Reglas decididas en el momento:** toda regla de negocio que se decida durante una tarjeta se documenta en `skills/reglas-de-negocio/SKILL.md` del repo backend (sección «Reglas decididas en la implementación») en la misma corrida de la decisión y en el mismo commit; decidir sin documentar es deuda inmediata. Si contradice al BRD, gana el BRD.
 - Ramas feature (`fe/<modulo>`) con merge directo a `dev`, y luego `dev` a `main` (sin PRs). Base actual del prototipo: `prototipo-front`.

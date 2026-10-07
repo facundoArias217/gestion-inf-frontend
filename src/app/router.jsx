@@ -11,6 +11,8 @@ import ComprasPage from '../features/compras/pages/compras-page'
 import CompraRegistroPage from '../features/compras/pages/compra-registro-page'
 import ProductosPage from '../features/productos/pages/productos-page'
 import ProveedoresPage from '../features/proveedores/pages/proveedores-page'
+import PresupuestosPage from '../features/presupuestos/pages/presupuestos-page'
+import PresupuestoRegistroPage from '../features/presupuestos/pages/presupuesto-registro-page'
 import VentasPage from '../features/ventas/pages/ventas-page'
 import VentaRegistroPage from '../features/ventas/pages/venta-registro-page'
 import { ProtectedRoute, RequireRole } from './guards'
@@ -69,7 +71,19 @@ export default function Router() {
           />
           <Route
             path="presupuestos"
-            element={<PlaceholderAmbos titulo="Presupuestos" />}
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <PresupuestosPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="presupuestos/nuevo"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <PresupuestoRegistroPage />
+              </RequireRole>
+            }
           />
           <Route
             path="armados"
