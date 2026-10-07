@@ -3,6 +3,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import PlaceholderPage from '../components/placeholder-page'
 import { useAuth } from '../hooks/use-auth'
 import LoginPage from '../features/auth/pages/login-page'
+import ArmadosPage from '../features/armados/pages/armados-page'
+import ArmadoFormPage from '../features/armados/pages/armado-form-page'
 import CategoriasPage from '../features/categorias/pages/categorias-page'
 import ClientesPage from '../features/clientes/pages/clientes-page'
 import ComprasPage from '../features/compras/pages/compras-page'
@@ -69,7 +71,30 @@ export default function Router() {
             path="presupuestos"
             element={<PlaceholderAmbos titulo="Presupuestos" />}
           />
-          <Route path="armados" element={<PlaceholderAmbos titulo="Armá tu PC" />} />
+          <Route
+            path="armados"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <ArmadosPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="armados/nuevo"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <ArmadoFormPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="armados/:id/editar"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <ArmadoFormPage />
+              </RequireRole>
+            }
+          />
           <Route path="pagos" element={<PlaceholderAmbos titulo="Pagos" />} />
           <Route
             path="clientes"
