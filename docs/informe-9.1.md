@@ -1,7 +1,7 @@
 # Informe de ejecución — Tarjeta 9.1 [FE-mock] Presupuestos
 
 **Tarjeta:** 9.1 — Presupuestos: creación, detalle y estados con vencimiento (frontend)
-**Tipo:** [FE-mock] · **Fecha:** 10/10/2026 · **Repositorio:** gestion-inf-frontend
+**Tipo:** [FE-mock] · **Fecha:** 08/10/2026 · **Repositorio:** gestion-inf-frontend
 
 ## Alcance ejecutado
 
