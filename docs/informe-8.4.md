@@ -1,7 +1,7 @@
 # Informe de ejecución — Tarjeta 8.4 [Int] Armados
 
 **Tarjeta:** 8.4 — Armados real (integración frontend ↔ backend)
-**Tipo:** [Int] · **Fecha:** 10/10/2026 · **Repositorio:** gestion-inf-frontend
+**Tipo:** [Int] · **Fecha:** 08/10/2026 · **Repositorio:** gestion-inf-frontend
 
 ## Alcance ejecutado
 
