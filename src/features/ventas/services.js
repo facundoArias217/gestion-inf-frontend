@@ -41,6 +41,7 @@ async function crearMock({ clienteId, fecha, detalles }) {
   }
 
   const productos = await listarProductos()
+  const precios = {}
   for (const detalle of detalles) {
     const producto = productos.find((p) => p.id === detalle.productoId)
     if (!producto) {
@@ -53,6 +54,7 @@ async function crearMock({ clienteId, fecha, detalles }) {
         `Stock insuficiente de ${producto.nombre} (disponible: ${producto.stock})`,
       )
     }
+    precios[detalle.productoId] = producto.precio
   }
 
   const ahora = new Date().toISOString()
@@ -65,7 +67,7 @@ async function crearMock({ clienteId, fecha, detalles }) {
       id: i + 1,
       productoId: detalle.productoId,
       cantidad: detalle.cantidad,
-      precioUnitario: detalle.precioUnitario,
+      precioUnitario: precios[detalle.productoId],
     })),
     createdAt: ahora,
     updatedAt: ahora,

@@ -44,9 +44,6 @@ const detalleSchema = z.object({
     .number({ invalid_type_error: 'Ingresá la cantidad' })
     .int('La cantidad debe ser entera')
     .min(1, 'Mínimo 1'),
-  precioUnitario: z
-    .number({ invalid_type_error: 'Ingresá el precio' })
-    .positive('Debe ser mayor a cero'),
 })
 
 const ventaSchema = z.object({
@@ -87,7 +84,7 @@ function VentaRegistroPage() {
     defaultValues: {
       clienteId: NaN,
       fecha: hoy(),
-      detalles: [{ productoId: NaN, cantidad: NaN, precioUnitario: NaN }],
+      detalles: [{ productoId: NaN, cantidad: NaN }],
     },
   })
 
@@ -141,10 +138,13 @@ function VentaRegistroPage() {
     return mapa
   }, [productos])
 
-  const subtotalDe = (detalle) =>
-    Number.isFinite(detalle?.cantidad) && Number.isFinite(detalle?.precioUnitario)
-      ? detalle.cantidad * detalle.precioUnitario
-      : 0
+  const subtotalDe = (detalle) => {
+    if (!Number.isFinite(detalle?.cantidad)) {
+      return 0
+    }
+    const producto = productosPorId.get(detalle.productoId)
+    return producto ? detalle.cantidad * producto.precio : 0
+  }
 
   const total = (detalles ?? []).reduce(
     (acum, detalle) => acum + subtotalDe(detalle),
@@ -185,7 +185,6 @@ function VentaRegistroPage() {
       detalles: values.detalles.map((detalle) => ({
         productoId: detalle.productoId,
         cantidad: detalle.cantidad,
-        precioUnitario: detalle.precioUnitario,
       })),
     }
 
@@ -287,7 +286,6 @@ function VentaRegistroPage() {
                       append({
                         productoId: NaN,
                         cantidad: NaN,
-                        precioUnitario: NaN,
                       })
                     }
                   >
@@ -321,14 +319,6 @@ function VentaRegistroPage() {
                             <Select
                               onValueChange={(valor) => {
                                 campo.onChange(Number(valor))
-                                const producto =
-                                  productosPorId.get(Number(valor))
-                                if (producto) {
-                                  form.setValue(
-                                    `detalles.${indice}.precioUnitario`,
-                                    producto.precio,
-                                  )
-                                }
                               }}
                               value={
                                 Number.isNaN(campo.value)
@@ -374,26 +364,18 @@ function VentaRegistroPage() {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name={`detalles.${indice}.precioUnitario`}
-                        render={({ field: campo }) => (
-                          <FormItem>
-                            <FormLabel className="sm:hidden">
-                              Precio de venta
-                            </FormLabel>
-                            <FormControl>
-                              <CampoNumero
-                                field={campo}
-                                min="0"
-                                step="1"
-                                placeholder="Precio"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid content-end">
+                        <span className="text-sm font-medium sm:hidden">
+                          Precio de lista
+                        </span>
+                        <p className="pb-2 text-sm text-muted-foreground">
+                          {productosPorId.get(elegido)?.precio != null
+                            ? formatCurrency(
+                                productosPorId.get(elegido).precio,
+                              )
+                            : '—'}
+                        </p>
+                      </div>
                       <p className="hidden pb-2 text-right text-sm text-muted-foreground sm:block">
                         {formatCurrency(subtotalDe(detalles?.[indice]))}
                       </p>
