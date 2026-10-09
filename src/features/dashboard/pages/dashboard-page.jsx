@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import {
   Card,
@@ -25,13 +26,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { listarProveedores } from '@/features/proveedores/services'
-import { formatCurrency } from '@/lib/format'
+import { useDocumentTitle } from '@/hooks/use-document-title'
+import { formatCurrency, formatFecha } from '@/lib/format'
 import { obtenerDashboard } from '../services'
 
 function DashboardPage() {
   const [metricas, setMetricas] = useState(null)
   const [proveedores, setProveedores] = useState([])
   const [cargando, setCargando] = useState(true)
+
+  useDocumentTitle('Dashboard')
 
   useEffect(() => {
     let cancelado = false
@@ -86,32 +90,44 @@ function DashboardPage() {
       detalle: `${metricas.productosBajoStock.total} activos con stock ≤ 5`,
       icono: AlertTriangle,
       principal: String(metricas.productosBajoStock.total),
+      acento: 'var(--chart-4)',
     },
     {
       titulo: 'Ventas de hoy',
       detalle: `${metricas.ventasHoy.cantidad} completadas`,
       icono: ShoppingCart,
       principal: formatCurrency(metricas.ventasHoy.montoTotal),
+      acento: 'var(--chart-2)',
     },
     {
       titulo: 'Ventas del mes',
       detalle: `${metricas.ventasMes.cantidad} completadas`,
       icono: CalendarDays,
       principal: formatCurrency(metricas.ventasMes.montoTotal),
+      acento: 'var(--chart-1)',
     },
     {
       titulo: 'Presupuestos pendientes',
       detalle: 'Esperando confirmación',
       icono: FileText,
       principal: String(metricas.presupuestosPendientes.cantidad),
+      acento: 'var(--chart-3)',
     },
   ]
 
   return (
     <div className="grid gap-4">
+      <PageHeader
+        titulo="Dashboard"
+        descripcion="Indicadores operativos del negocio en un vistazo."
+      />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {tarjetas.map((tarjeta) => (
-          <Card key={tarjeta.titulo}>
+          <Card
+            key={tarjeta.titulo}
+            className="border-t-2"
+            style={{ borderTopColor: tarjeta.acento }}
+          >
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {tarjeta.titulo}
@@ -119,7 +135,9 @@ function DashboardPage() {
               <tarjeta.icono className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{tarjeta.principal}</p>
+              <p className="text-2xl font-semibold tabular-nums">
+                {tarjeta.principal}
+              </p>
               <p className="text-xs text-muted-foreground">{tarjeta.detalle}</p>
             </CardContent>
           </Card>
@@ -189,7 +207,7 @@ function DashboardPage() {
                       {proveedoresPorId.get(compra.proveedorId)?.razonSocial ??
                         `Proveedor #${compra.proveedorId}`}
                     </TableCell>
-                    <TableCell>{compra.fecha}</TableCell>
+                    <TableCell>{formatFecha(compra.fecha)}</TableCell>
                     <TableCell>
                       <StatusBadge status={compra.estado} />
                     </TableCell>

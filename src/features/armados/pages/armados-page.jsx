@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
+  Cpu,
   Eye,
   MoreHorizontal,
   Pencil,
@@ -9,15 +10,14 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -38,6 +38,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarCategorias } from '@/features/categorias/services'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { formatCurrency } from '@/lib/format'
 import ArmadoDetalleDialog from '../components/armado-detalle-dialog'
@@ -73,6 +74,8 @@ function ArmadosPage() {
   const [orden, setOrden] = useOrden('armados', 'fecha-desc')
   const [armadoDetalle, setArmadoDetalle] = useState(null)
   const [armadoFinalizar, setArmadoFinalizar] = useState(null)
+
+  useDocumentTitle('Armá tu PC')
 
   const recargarArmados = useCallback(() => {
     listarArmados()
@@ -150,33 +153,33 @@ function ArmadosPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Armá tu PC
-            </CardTitle>
-            <CardDescription>
-              Configuraciones de PC a partir de componentes del catálogo. Solo
-              un armado FINALIZADO puede asociarse a un presupuesto.
-            </CardDescription>
-          </div>
+      <PageHeader
+        titulo="Armá tu PC"
+        descripcion="Configuraciones de PC a partir de componentes del catálogo. Solo un armado FINALIZADO puede asociarse a un presupuesto."
+        acciones={
           <Button onClick={() => navigate('/armados/nuevo')}>
             <Plus className="size-4" />
             Nuevo armado
           </Button>
-        </CardHeader>
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Tabs value={filtro} onValueChange={setFiltro}>
-              <TabsList>
-                {FILTROS.map((filtroDef) => (
-                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
-                    {filtroDef.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={filtro} onValueChange={setFiltro}>
+                <TabsList>
+                  {FILTROS.map((filtroDef) => (
+                    <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                      {filtroDef.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                {filtrados.length} de {armados.length} armados
+              </p>
+            </div>
             <OrdenSelect
               orden={orden}
               onOrdenChange={setOrden}
@@ -206,11 +209,24 @@ function ArmadosPage() {
                 ))
               ) : filtrados.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay armados para este filtro.
+                  <TableCell colSpan={6} className="p-0">
+                    {armados.length === 0 ? (
+                      <EmptyState
+                        icono={Cpu}
+                        titulo="Todavía no hay armados"
+                        descripcion="Armá una PC con componentes del catálogo y finalizada queda lista para presupuestar."
+                        accion={{ icono: Plus, label: 'Armar el primero' }}
+                        onAccion={() => navigate('/armados/nuevo')}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={Cpu}
+                        titulo="No hay resultados"
+                        descripcion="Ningún armado coincide con el filtro de estado."
+                        accion={{ label: 'Limpiar filtro', variant: 'outline' }}
+                        onAccion={() => setFiltro('todas')}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (

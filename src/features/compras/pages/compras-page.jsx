@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Ban, CheckCircle2, Eye, MoreHorizontal, Plus } from 'lucide-react'
+import { Ban, CheckCircle2, Eye, MoreHorizontal, PackagePlus, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -31,8 +30,9 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarProveedores } from '@/features/proveedores/services'
 import { listarProductos } from '@/features/productos/services'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatFecha } from '@/lib/format'
 import CancelarCompraDialog from '../components/cancelar-compra-dialog'
 import CompraDetalleDialog from '../components/compra-detalle-dialog'
 import ConfirmarCompraDialog from '../components/confirmar-compra-dialog'
@@ -67,6 +67,8 @@ function ComprasPage() {
   const [compraDetalle, setCompraDetalle] = useState(null)
   const [compraConfirmar, setCompraConfirmar] = useState(null)
   const [compraCancelar, setCompraCancelar] = useState(null)
+
+  useDocumentTitle('Compras')
 
   const recargarCompras = useCallback(() => {
     listarCompras()
@@ -136,33 +138,33 @@ function ComprasPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Compras
-            </CardTitle>
-            <CardDescription>
-              Reposición de stock a proveedores. La compra se registra
-              PENDIENTE y el stock aumenta al confirmarse.
-            </CardDescription>
-          </div>
+      <PageHeader
+        titulo="Compras"
+        descripcion="Reposición de stock a proveedores. La compra se registra PENDIENTE y el stock aumenta al confirmarse."
+        acciones={
           <Button onClick={() => navigate('/compras/nueva')}>
             <Plus className="size-4" />
             Nueva compra
           </Button>
-        </CardHeader>
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Tabs value={filtro} onValueChange={setFiltro}>
-              <TabsList>
-                {FILTROS.map((filtroDef) => (
-                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
-                    {filtroDef.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={filtro} onValueChange={setFiltro}>
+                <TabsList>
+                  {FILTROS.map((filtroDef) => (
+                    <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                      {filtroDef.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                {ordenadas.length} de {compras.length} compras
+              </p>
+            </div>
             <OrdenSelect
               orden={orden}
               onOrdenChange={setOrden}
@@ -192,17 +194,30 @@ function ComprasPage() {
                 ))
               ) : ordenadas.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay compras registradas.
+                  <TableCell colSpan={6} className="p-0">
+                    {compras.length === 0 ? (
+                      <EmptyState
+                        icono={PackagePlus}
+                        titulo="Todavía no hay compras"
+                        descripcion="La primera compra a un proveedor queda PENDIENTE hasta confirmarla (RN-COM-01)."
+                        accion={{ icono: Plus, label: 'Registrar la primera' }}
+                        onAccion={() => navigate('/compras/nueva')}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={PackagePlus}
+                        titulo="No hay resultados"
+                        descripcion="Ninguna compra coincide con el filtro de estado."
+                        accion={{ label: 'Limpiar filtro', variant: 'outline' }}
+                        onAccion={() => setFiltro('todas')}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
                 ordenadas.map((compra) => (
                   <TableRow key={compra.id}>
-                    <TableCell>{compra.fecha}</TableCell>
+                    <TableCell>{formatFecha(compra.fecha)}</TableCell>
                     <TableCell className="font-medium">
                       {proveedoresPorId.get(compra.proveedorId)?.razonSocial ??
                         '—'}

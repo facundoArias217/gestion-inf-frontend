@@ -9,9 +9,11 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Moon,
   Package,
   PackagePlus,
   ShoppingCart,
+  Sun,
   Tags,
   Truck,
   UserCog,
@@ -30,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '../hooks/use-auth'
+import { useTheme } from '../hooks/use-theme'
 
 const MENU = [
   {
@@ -134,6 +137,7 @@ function Sidebar({ abierto, onCerrar }) {
 
 function Navbar({ onAbrirMenu }) {
   const { usuario, logout } = useAuth()
+  const { tema, alternar } = useTheme()
   const navigate = useNavigate()
 
   const iniciales = `${usuario.nombre[0]}${usuario.apellido[0]}`.toUpperCase()
@@ -180,6 +184,14 @@ function Navbar({ onAbrirMenu }) {
             <StatusBadge status={usuario.rol} />
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={alternar}>
+            {tema === 'oscuro' ? (
+              <Sun className="size-4" />
+            ) : (
+              <Moon className="size-4" />
+            )}
+            {tema === 'oscuro' ? 'Modo claro' : 'Modo oscuro'}
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
             onClick={cerrarSesion}

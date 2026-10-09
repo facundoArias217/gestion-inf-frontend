@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw } from 'lucide-react'
+import { Archive, MoreHorizontal, Package, Pencil, Plus, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -37,6 +36,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarCategorias } from '@/features/categorias/services'
 import { useAuth } from '@/hooks/use-auth'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { formatCurrency } from '@/lib/format'
 import BajaProductoDialog from '../components/baja-producto-dialog'
@@ -71,6 +71,8 @@ function ProductosPage() {
   const [formAbierto, setFormAbierto] = useState(false)
   const [productoEditando, setProductoEditando] = useState(null)
   const [productoBaja, setProductoBaja] = useState(null)
+
+  useDocumentTitle('Productos')
 
   const recargarProductos = useCallback(() => {
     listarProductos()
@@ -166,36 +168,39 @@ function ProductosPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Productos
-            </CardTitle>
-            <CardDescription>
-              {isAdmin
-                ? 'Catálogo centralizado de la tienda: productos sueltos y componentes para armados.'
-                : 'Consulta del catálogo en modo solo-lectura (RN-USR-03).'}
-            </CardDescription>
-          </div>
-          {isAdmin && (
+      <PageHeader
+        titulo="Productos"
+        descripcion={
+          isAdmin
+            ? 'Catálogo centralizado de la tienda: productos sueltos y componentes para armados.'
+            : 'Consulta del catálogo en modo solo-lectura (RN-USR-03).'
+        }
+        acciones={
+          isAdmin && (
             <Button onClick={abrirAlta}>
               <Plus className="size-4" />
               Nuevo producto
             </Button>
-          )}
-        </CardHeader>
+          )
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Tabs value={filtro} onValueChange={setFiltro}>
-              <TabsList>
-                {FILTROS.map((filtroDef) => (
-                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
-                    {filtroDef.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={filtro} onValueChange={setFiltro}>
+                <TabsList>
+                  {FILTROS.map((filtroDef) => (
+                    <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                      {filtroDef.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                {filtrados.length} de {productos.length} productos
+              </p>
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
                 <SelectTrigger
@@ -246,11 +251,35 @@ function ProductosPage() {
                 ))
               ) : filtrados.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={isAdmin ? 7 : 6}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay productos para este filtro.
+                  <TableCell colSpan={isAdmin ? 7 : 6} className="p-0">
+                    {productos.length === 0 ? (
+                      <EmptyState
+                        icono={Package}
+                        titulo="Todavía no hay productos"
+                        descripcion="El catálogo es el punto de partida de compras, ventas y armados."
+                        accion={
+                          isAdmin && {
+                            icono: Plus,
+                            label: 'Crear el primer producto',
+                          }
+                        }
+                        onAccion={abrirAlta}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={Package}
+                        titulo="No hay resultados"
+                        descripcion="Ningún producto coincide con los filtros activos."
+                        accion={{
+                          label: 'Limpiar filtros',
+                          variant: 'outline',
+                        }}
+                        onAccion={() => {
+                          setFiltro('todas')
+                          setCategoriaFiltro('todas')
+                        }}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (

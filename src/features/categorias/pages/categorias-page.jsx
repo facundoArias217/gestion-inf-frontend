@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw } from 'lucide-react'
+import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw, Tags } from 'lucide-react'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -29,6 +28,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import BajaCategoriaDialog from '../components/baja-categoria-dialog'
 import CategoriaFormDialog from '../components/categoria-form-dialog'
@@ -49,6 +49,8 @@ function CategoriasPage() {
   const [categoriaEditando, setCategoriaEditando] = useState(null)
   const [categoriaBaja, setCategoriaBaja] = useState(null)
   const [orden, setOrden] = useOrden('categorias')
+
+  useDocumentTitle('Categorías')
 
   const recargarCategorias = useCallback(() => {
     listarCategorias()
@@ -119,36 +121,39 @@ function CategoriasPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Categorías
-            </CardTitle>
-            <CardDescription>
-              {isAdmin
-                ? 'Clasificación de los productos del catálogo.'
-                : 'Consulta del catálogo en modo solo-lectura (RN-USR-03).'}
-            </CardDescription>
-          </div>
-          {isAdmin && (
+      <PageHeader
+        titulo="Categorías"
+        descripcion={
+          isAdmin
+            ? 'Clasificación de los productos del catálogo.'
+            : 'Consulta del catálogo en modo solo-lectura (RN-USR-03).'
+        }
+        acciones={
+          isAdmin && (
             <Button onClick={abrirAlta}>
               <Plus className="size-4" />
               Nueva categoría
             </Button>
-          )}
-        </CardHeader>
+          )
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Tabs value={filtro} onValueChange={setFiltro}>
-              <TabsList>
-                {FILTROS.map((filtroDef) => (
-                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
-                    {filtroDef.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={filtro} onValueChange={setFiltro}>
+                <TabsList>
+                  {FILTROS.map((filtroDef) => (
+                    <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                      {filtroDef.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                {filtradas.length} de {categorias.length} categorías
+              </p>
+            </div>
             <OrdenSelect orden={orden} onOrdenChange={setOrden} />
           </div>
 
@@ -174,11 +179,29 @@ function CategoriasPage() {
                 ))
               ) : filtradas.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={isAdmin ? 4 : 3}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay categorías para este filtro.
+                  <TableCell colSpan={isAdmin ? 4 : 3} className="p-0">
+                    {categorias.length === 0 ? (
+                      <EmptyState
+                        icono={Tags}
+                        titulo="Todavía no hay categorías"
+                        descripcion="La primera categoría que crees habilita el alta de productos."
+                        accion={
+                          isAdmin && {
+                            icono: Plus,
+                            label: 'Crear la primera categoría',
+                          }
+                        }
+                        onAccion={abrirAlta}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={Tags}
+                        titulo="No hay resultados"
+                        descripcion="Ninguna categoría coincide con el filtro activo."
+                        accion={{ label: 'Limpiar filtro', variant: 'outline' }}
+                        onAccion={() => setFiltro('todas')}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (

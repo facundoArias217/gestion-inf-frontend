@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Eye, MoreHorizontal, Plus, ShoppingCart, XCircle } from 'lucide-react'
+import { CheckCircle2, Eye, FileText, MoreHorizontal, Plus, ShoppingCart, XCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -39,7 +38,8 @@ import { listarArmados } from '@/features/armados/services'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
-import { formatCurrency } from '@/lib/format'
+import { useDocumentTitle } from '@/hooks/use-document-title'
+import { formatCurrency, formatFecha, formatVencimiento } from '@/lib/format'
 import PresupuestoDetalleDialog from '../components/presupuesto-detalle-dialog'
 import ConvertirPresupuestoDialog from '../components/convertir-presupuesto-dialog'
 import RechazarPresupuestoDialog from '../components/rechazar-presupuesto-dialog'
@@ -108,6 +108,8 @@ function PresupuestosPage() {
   const [presupuestoDetalle, setPresupuestoDetalle] = useState(null)
   const [presupuestoRechazar, setPresupuestoRechazar] = useState(null)
   const [presupuestoConvertir, setPresupuestoConvertir] = useState(null)
+
+  useDocumentTitle('Presupuestos')
 
   const recargarPresupuestos = useCallback(() => {
     listarPresupuestos()
@@ -204,43 +206,42 @@ function PresupuestosPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Presupuestos
-            </CardTitle>
-            <CardDescription>
-              Cotizaciones para clientes con vencimiento y estados. ACEPTADO y
-              CONVERTIDO son momentos distintos; la conversión en venta exige
-              reverificar stock.
-            </CardDescription>
-          </div>
+      <PageHeader
+        titulo="Presupuestos"
+        descripcion="Cotizaciones para clientes con vencimiento y estados. La conversión en venta reverifica stock (RN-PRE-04/05)."
+        acciones={
           <Button onClick={() => navigate('/presupuestos/nuevo')}>
             <Plus className="size-4" />
             Nuevo presupuesto
           </Button>
-        </CardHeader>
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Select value={filtro} onValueChange={setFiltro}>
-              <SelectTrigger
-                className="w-full sm:w-48"
-                aria-label="Filtrar por estado"
-              >
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                {ESTADOS_FILTRO.map((estadoFiltro) => (
-                  <SelectItem
-                    key={estadoFiltro.valor}
-                    value={estadoFiltro.valor}
-                  >
-                    {estadoFiltro.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={filtro} onValueChange={setFiltro}>
+                <SelectTrigger
+                  className="w-full sm:w-48"
+                  aria-label="Filtrar por estado"
+                >
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ESTADOS_FILTRO.map((estadoFiltro) => (
+                    <SelectItem
+                      key={estadoFiltro.valor}
+                      value={estadoFiltro.valor}
+                    >
+                      {estadoFiltro.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {filtrados.length} de {presupuestos.length} presupuestos
+              </p>
+            </div>
             <OrdenSelect
               orden={orden}
               onOrdenChange={setOrden}
@@ -271,11 +272,24 @@ function PresupuestosPage() {
                 ))
               ) : filtrados.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay presupuestos para este filtro.
+                  <TableCell colSpan={7} className="p-0">
+                    {presupuestos.length === 0 ? (
+                      <EmptyState
+                        icono={FileText}
+                        titulo="Todavía no hay presupuestos"
+                        descripcion="Cotizá productos o un armado FINALIZADO para este cliente."
+                        accion={{ icono: Plus, label: 'Crear el primero' }}
+                        onAccion={() => navigate('/presupuestos/nuevo')}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={FileText}
+                        titulo="No hay resultados"
+                        descripcion="Ningún presupuesto coincide con el filtro de estado."
+                        accion={{ label: 'Limpiar filtro', variant: 'outline' }}
+                        onAccion={() => setFiltro('todas')}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -289,7 +303,7 @@ function PresupuestosPage() {
 
                   return (
                     <TableRow key={presupuesto.id}>
-                      <TableCell>{presupuesto.fecha}</TableCell>
+                      <TableCell>{formatFecha(presupuesto.fecha)}</TableCell>
                       <TableCell className="font-medium">
                         {clientesPorId.get(presupuesto.clienteId)
                           ? `${clientesPorId.get(presupuesto.clienteId).apellido}, ${
@@ -304,9 +318,11 @@ function PresupuestosPage() {
                         {formatCurrency(totalDe(presupuesto, armadosPorId))}
                       </TableCell>
                       <TableCell>
-                        {presupuesto.fechaVencimiento}
+                        {formatFecha(presupuesto.fechaVencimiento)}
                         {estaVencido(presupuesto) && (
-                          <span className="ml-1 text-destructive">(vencido)</span>
+                          <span className="ml-1 text-xs text-destructive">
+                            ({formatVencimiento(presupuesto.fechaVencimiento)})
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>

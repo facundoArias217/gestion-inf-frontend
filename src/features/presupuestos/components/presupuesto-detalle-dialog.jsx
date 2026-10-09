@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import StatusBadge from '@/components/status-badge'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatFecha } from '@/lib/format'
 
 function totalDe(presupuesto, armado) {
   const totalSueltos = presupuesto.detalles.reduce(
@@ -60,7 +60,8 @@ function PresupuestoDetalleDialog({
           </DialogTitle>
           <DialogDescription>
             {cliente ? `${cliente.apellido}, ${cliente.nombre}` : '—'} · desde{' '}
-            {presupuesto?.fecha} hasta {presupuesto?.fechaVencimiento}
+            {formatFecha(presupuesto?.fecha)} hasta{' '}
+            {formatFecha(presupuesto?.fechaVencimiento)}
           </DialogDescription>
         </DialogHeader>
 

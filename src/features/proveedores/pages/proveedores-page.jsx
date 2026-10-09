@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw } from 'lucide-react'
+import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -28,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { formatCuit } from '@/lib/format'
 import BajaProveedorDialog from '../components/baja-proveedor-dialog'
@@ -55,6 +55,8 @@ function ProveedoresPage() {
   const [formAbierto, setFormAbierto] = useState(false)
   const [proveedorEditando, setProveedorEditando] = useState(null)
   const [proveedorBaja, setProveedorBaja] = useState(null)
+
+  useDocumentTitle('Proveedores')
 
   const recargarProveedores = useCallback(() => {
     listarProveedores()
@@ -125,33 +127,33 @@ function ProveedoresPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Proveedores
-            </CardTitle>
-            <CardDescription>
-              Empresas y personas que suministran productos a la tienda; son el
-              origen de las compras.
-            </CardDescription>
-          </div>
+      <PageHeader
+        titulo="Proveedores"
+        descripcion="Empresas y personas que suministran productos a la tienda; son el origen de las compras."
+        acciones={
           <Button onClick={abrirAlta}>
             <Plus className="size-4" />
             Nuevo proveedor
           </Button>
-        </CardHeader>
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Tabs value={filtro} onValueChange={setFiltro}>
-              <TabsList>
-                {FILTROS.map((filtroDef) => (
-                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
-                    {filtroDef.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={filtro} onValueChange={setFiltro}>
+                <TabsList>
+                  {FILTROS.map((filtroDef) => (
+                    <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                      {filtroDef.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                {filtrados.length} de {proveedores.length} proveedores
+              </p>
+            </div>
             <OrdenSelect
               orden={orden}
               onOrdenChange={setOrden}
@@ -182,11 +184,24 @@ function ProveedoresPage() {
                 ))
               ) : filtrados.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay proveedores para este filtro.
+                  <TableCell colSpan={7} className="p-0">
+                    {proveedores.length === 0 ? (
+                      <EmptyState
+                        icono={Truck}
+                        titulo="Todavía no hay proveedores"
+                        descripcion="El primer proveedor habilita el registro de compras."
+                        accion={{ icono: Plus, label: 'Crear el primero' }}
+                        onAccion={abrirAlta}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={Truck}
+                        titulo="No hay resultados"
+                        descripcion="Ningún proveedor coincide con el filtro activo."
+                        accion={{ label: 'Limpiar filtro', variant: 'outline' }}
+                        onAccion={() => setFiltro('todas')}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (

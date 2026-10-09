@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { CreditCard, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   Select,
@@ -30,8 +29,9 @@ import {
 } from '@/components/ui/table'
 import { listarClientes } from '@/features/clientes/services'
 import { listarVentas } from '@/features/ventas/services'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatFecha } from '@/lib/format'
 import PagoFormDialog from '../components/pago-form-dialog'
 import { listarPagos } from '../services'
 
@@ -54,6 +54,8 @@ function PagosPage() {
   const [filtro, setFiltro] = useState('todas')
   const [orden, setOrden] = useOrden('pagos', 'fecha-desc')
   const [registroAbierto, setRegistroAbierto] = useState(false)
+
+  useDocumentTitle('Pagos')
 
   useEffect(() => {
     let cancelado = false
@@ -119,43 +121,42 @@ function PagosPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Pagos
-            </CardTitle>
-            <CardDescription>
-              Registro interno del cobro de las ventas (pago simulado). Un
-              RECHAZADO permite reintentar sobre la misma venta; el pago nunca
-              modifica stock (RN-PAG-03).
-            </CardDescription>
-          </div>
+      <PageHeader
+        titulo="Pagos"
+        descripcion="Registro interno del cobro de las ventas (pago simulado). Un RECHAZADO permite reintentar; el pago nunca toca stock (RN-PAG-03)."
+        acciones={
           <Button onClick={() => setRegistroAbierto(true)}>
             <Plus className="size-4" />
             Registrar cobro
           </Button>
-        </CardHeader>
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Select value={filtro} onValueChange={setFiltro}>
-              <SelectTrigger
-                className="w-full sm:w-48"
-                aria-label="Filtrar por resultado"
-              >
-                <SelectValue placeholder="Resultado" />
-              </SelectTrigger>
-              <SelectContent>
-                {RESULTADOS_FILTRO.map((resultadoFiltro) => (
-                  <SelectItem
-                    key={resultadoFiltro.valor}
-                    value={resultadoFiltro.valor}
-                  >
-                    {resultadoFiltro.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={filtro} onValueChange={setFiltro}>
+                <SelectTrigger
+                  className="w-full sm:w-48"
+                  aria-label="Filtrar por resultado"
+                >
+                  <SelectValue placeholder="Resultado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RESULTADOS_FILTRO.map((resultadoFiltro) => (
+                    <SelectItem
+                      key={resultadoFiltro.valor}
+                      value={resultadoFiltro.valor}
+                    >
+                      {resultadoFiltro.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {filtrados.length} de {pagos.length} pagos
+              </p>
+            </div>
             <OrdenSelect
               orden={orden}
               onOrdenChange={setOrden}
@@ -185,11 +186,24 @@ function PagosPage() {
                 ))
               ) : filtrados.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay pagos para este filtro.
+                  <TableCell colSpan={6} className="p-0">
+                    {pagos.length === 0 ? (
+                      <EmptyState
+                        icono={CreditCard}
+                        titulo="Todavía no hay cobros registrados"
+                        descripcion="El circuito comercial se cierra registrando el pago de cada venta."
+                        accion={{ icono: Plus, label: 'Registrar el primero' }}
+                        onAccion={() => setRegistroAbierto(true)}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={CreditCard}
+                        titulo="No hay resultados"
+                        descripcion="Ningún pago coincide con el filtro de resultado."
+                        accion={{ label: 'Limpiar filtro', variant: 'outline' }}
+                        onAccion={() => setFiltro('todas')}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -201,7 +215,7 @@ function PagosPage() {
 
                   return (
                     <TableRow key={pago.id}>
-                      <TableCell>{pago.fecha}</TableCell>
+                      <TableCell>{formatFecha(pago.fecha)}</TableCell>
                       <TableCell className="font-medium">
                         #{pago.ventaId}
                       </TableCell>

@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Ban, Eye, MoreHorizontal, Plus } from 'lucide-react'
+import { Ban, Eye, MoreHorizontal, Plus, ShoppingCart } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import EmptyState from '@/components/empty-state'
 import OrdenSelect from '@/components/orden-select'
+import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -31,8 +30,9 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatFecha } from '@/lib/format'
 import CancelarVentaDialog from '../components/cancelar-venta-dialog'
 import VentaDetalleDialog from '../components/venta-detalle-dialog'
 import { listarVentas } from '../services'
@@ -64,6 +64,8 @@ function VentasPage() {
   const [orden, setOrden] = useOrden('ventas', 'fecha-desc')
   const [ventaDetalle, setVentaDetalle] = useState(null)
   const [ventaCancelar, setVentaCancelar] = useState(null)
+
+  useDocumentTitle('Ventas')
 
   const recargarVentas = useCallback(() => {
     listarVentas()
@@ -133,33 +135,33 @@ function VentasPage() {
 
   return (
     <div className="grid gap-4">
-      <Card>
-        <CardHeader className="flex-col items-start justify-between gap-4 sm:flex-row">
-          <div className="grid gap-1.5">
-            <CardTitle className="text-xl font-semibold tracking-tight">
-              Ventas
-            </CardTitle>
-            <CardDescription>
-              Ventas directas de productos. La venta nace COMPLETADA y
-              descuenta stock; cancelarla lo reintegra.
-            </CardDescription>
-          </div>
+      <PageHeader
+        titulo="Ventas"
+        descripcion="Ventas directas de productos. La venta nace COMPLETADA y descuenta stock; cancelarla lo reintegra."
+        acciones={
           <Button onClick={() => navigate('/ventas/nueva')}>
             <Plus className="size-4" />
             Nueva venta
           </Button>
-        </CardHeader>
+        }
+      />
+      <Card>
         <CardContent className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Tabs value={filtro} onValueChange={setFiltro}>
-              <TabsList>
-                {FILTROS.map((filtroDef) => (
-                  <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
-                    {filtroDef.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={filtro} onValueChange={setFiltro}>
+                <TabsList>
+                  {FILTROS.map((filtroDef) => (
+                    <TabsTrigger key={filtroDef.valor} value={filtroDef.valor}>
+                      {filtroDef.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                {ordenadas.length} de {ventas.length} ventas
+              </p>
+            </div>
             <OrdenSelect
               orden={orden}
               onOrdenChange={setOrden}
@@ -189,17 +191,30 @@ function VentasPage() {
                 ))
               ) : ordenadas.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No hay ventas para este filtro.
+                  <TableCell colSpan={6} className="p-0">
+                    {ventas.length === 0 ? (
+                      <EmptyState
+                        icono={ShoppingCart}
+                        titulo="Todavía no hay ventas"
+                        descripcion="La primera venta descuenta stock en el mismo acto (RN-VTA-01)."
+                        accion={{ icono: Plus, label: 'Registrar la primera' }}
+                        onAccion={() => navigate('/ventas/nueva')}
+                      />
+                    ) : (
+                      <EmptyState
+                        icono={ShoppingCart}
+                        titulo="No hay resultados"
+                        descripcion="Ninguna venta coincide con el filtro de estado."
+                        accion={{ label: 'Limpiar filtro', variant: 'outline' }}
+                        onAccion={() => setFiltro('todas')}
+                      />
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
                 ordenadas.map((venta) => (
                   <TableRow key={venta.id}>
-                    <TableCell>{venta.fecha}</TableCell>
+                    <TableCell>{formatFecha(venta.fecha)}</TableCell>
                     <TableCell className="font-medium">
                       {clientesPorId.get(venta.clienteId)
                         ? `${clientesPorId.get(venta.clienteId).apellido}, ${

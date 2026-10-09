@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge"
+import { cn } from "cn"
 
 const STATUS_VARIANTS = {
   PENDIENTE: "info",
@@ -16,8 +17,20 @@ const STATUS_VARIANTS = {
 }
 
 function StatusBadge({ status, className }) {
+  const variante = STATUS_VARIANTS[status] ?? "secondary"
+  const conDot = variante === "info" || variante === "success" || variante === "destructive" || variante === "warning"
+
   return (
-    <Badge variant={STATUS_VARIANTS[status] ?? "secondary"} className={className}>
+    <Badge
+      variant={variante}
+      className={cn("gap-1.5", !conDot && "gap-0", className)}
+    >
+      {conDot && (
+        <span
+          aria-hidden="true"
+          className="size-1.5 shrink-0 rounded-full bg-current opacity-90"
+        />
+      )}
       {status}
     </Badge>
   )
