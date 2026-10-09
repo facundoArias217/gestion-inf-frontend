@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Eye, FileText, MoreHorizontal, Plus, ShoppingCart, XCircle } from 'lucide-react'
+import { CheckCircle2, Eye, FileText, MoreHorizontal, Plus, Printer, ShoppingCart, XCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -338,50 +338,58 @@ function PresupuestosPage() {
                           >
                             <Eye className="size-4" />
                           </Button>
-                          {(pendienteVigente || aceptado) && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={`Acciones del presupuesto ${presupuesto.id}`}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Acciones del presupuesto ${presupuesto.id}`}
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {pendienteVigente && (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => aceptar(presupuesto)}
                                 >
-                                  <MoreHorizontal className="size-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {pendienteVigente && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() => aceptar(presupuesto)}
-                                    >
-                                      <CheckCircle2 className="size-4" />
-                                      Aceptar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      className="text-destructive focus:text-destructive"
-                                      onClick={() =>
-                                        setPresupuestoRechazar(presupuesto)
-                                      }
-                                    >
-                                      <XCircle className="size-4" />
-                                      Rechazar
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                                {aceptado && (
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      setPresupuestoConvertir(presupuesto)
-                                    }
-                                  >
-                                    <ShoppingCart className="size-4" />
-                                    Convertir en venta
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                                  <CheckCircle2 className="size-4" />
+                                  Aceptar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() =>
+                                    setPresupuestoRechazar(presupuesto)
+                                  }
+                                >
+                                  <XCircle className="size-4" />
+                                  Rechazar
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {aceptado && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setPresupuestoConvertir(presupuesto)
+                                }
+                              >
+                                <ShoppingCart className="size-4" />
+                                Convertir en venta
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() =>
+                                navigate(
+                                  `/presupuestos/${presupuesto.id}/imprimir`,
+                                )
+                              }
+                            >
+                              <Printer className="size-4" />
+                              Imprimir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
