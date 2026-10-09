@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import CuitInput from '@/components/cuit-input'
+import TelefonoInput from '@/components/telefono-input'
 import { validarCuit } from '@/lib/cuit'
 import { actualizarCliente, crearCliente } from '../services'
 
@@ -190,13 +191,16 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
                 control={form.control}
                 name="telefono"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Teléfono</FormLabel>
-                    <FormControl>
-                      <Input placeholder="11 5555-2020" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                    <FormItem>
+                      <FormLabel>Teléfono</FormLabel>
+                      <FormControl>
+                        <TelefonoInput
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                 )}
               />
               <FormField

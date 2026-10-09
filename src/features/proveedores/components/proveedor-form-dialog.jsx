@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 
 import CuitInput from '@/components/cuit-input'
+import TelefonoInput from '@/components/telefono-input'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -173,7 +174,10 @@ function ProveedorFormDialog({ open, onOpenChange, proveedor, onGuardado }) {
                   <FormItem>
                     <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <Input placeholder="11 5555-2020" {...field} />
+                      <TelefonoInput
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
