@@ -55,7 +55,6 @@ function ClientesPage() {
   const [clienteBaja, setClienteBaja] = useState(null)
 
   useDocumentTitle('Clientes')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarClientes = useCallback(() => {
     listarClientes()
@@ -133,6 +132,7 @@ function ClientesPage() {
     }
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtrados)
 
   return (

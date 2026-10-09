@@ -111,7 +111,6 @@ function PresupuestosPage() {
   const [presupuestoConvertir, setPresupuestoConvertir] = useState(null)
 
   useDocumentTitle('Presupuestos')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarPresupuestos = useCallback(() => {
     listarPresupuestos()
@@ -227,6 +226,7 @@ function PresupuestosPage() {
     }
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtrados)
 
   return (

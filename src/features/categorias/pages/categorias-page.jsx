@@ -56,7 +56,6 @@ function CategoriasPage() {
   const [orden, setOrden] = useOrden('categorias')
 
   useDocumentTitle('Categorías')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtradas.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarCategorias = useCallback(() => {
     listarCategorias()
@@ -130,6 +129,7 @@ function CategoriasPage() {
     }
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtradas.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtradas)
 
   return (

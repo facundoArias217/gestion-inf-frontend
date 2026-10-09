@@ -77,7 +77,6 @@ function ArmadosPage() {
   const [armadoFinalizar, setArmadoFinalizar] = useState(null)
 
   useDocumentTitle('Armá tu PC')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarArmados = useCallback(() => {
     listarArmados()
@@ -175,6 +174,7 @@ function ArmadosPage() {
     }
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtrados)
 
   return (

@@ -56,7 +56,6 @@ function PagosPage() {
   const [registroAbierto, setRegistroAbierto] = useState(false)
 
   useDocumentTitle('Pagos')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   useEffect(() => {
     let cancelado = false
@@ -131,6 +130,7 @@ function PagosPage() {
       .catch((error) => toast.error(error.message))
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtrados)
 
   return (

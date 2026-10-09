@@ -55,7 +55,6 @@ function ProveedoresPage() {
   const [proveedorBaja, setProveedorBaja] = useState(null)
 
   useDocumentTitle('Proveedores')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarProveedores = useCallback(() => {
     listarProveedores()
@@ -130,6 +129,7 @@ function ProveedoresPage() {
     }
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtrados)
 
   return (

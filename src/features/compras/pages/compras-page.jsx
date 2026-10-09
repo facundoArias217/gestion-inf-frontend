@@ -69,7 +69,6 @@ function ComprasPage() {
   const [compraCancelar, setCompraCancelar] = useState(null)
 
   useDocumentTitle('Compras')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(ordenadas.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarCompras = useCallback(() => {
     listarCompras()
@@ -143,6 +142,7 @@ function ComprasPage() {
     return ordenarListado(porBusqueda, orden)
   }, [compras, filtro, busqueda, orden, proveedoresPorId])
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(ordenadas.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(ordenadas)
 
   return (

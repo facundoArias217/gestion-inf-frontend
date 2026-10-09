@@ -61,7 +61,6 @@ function ProductosPage() {
   const [productoBaja, setProductoBaja] = useState(null)
 
   useDocumentTitle('Productos')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarProductos = useCallback(() => {
     listarProductos()
@@ -160,6 +159,7 @@ function ProductosPage() {
     }
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtrados)
 
   return (

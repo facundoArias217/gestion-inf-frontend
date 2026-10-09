@@ -56,7 +56,6 @@ function UsuariosPage() {
   const [orden, setOrden] = useOrden('usuarios')
 
   useDocumentTitle('Usuarios')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarUsuarios = useCallback(() => {
     listarUsuarios()
@@ -132,6 +131,7 @@ function UsuariosPage() {
     }
   }
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(filtrados)
 
   return (

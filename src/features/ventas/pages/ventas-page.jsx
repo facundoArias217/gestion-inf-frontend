@@ -66,7 +66,6 @@ function VentasPage() {
   const [ventaCancelar, setVentaCancelar] = useState(null)
 
   useDocumentTitle('Ventas')
-  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(ordenadas.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarVentas = useCallback(() => {
     listarVentas()
@@ -143,6 +142,7 @@ function VentasPage() {
     return ordenarListado(porBusqueda, orden)
   }, [ventas, filtro, busqueda, orden, clientesPorId])
 
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(ordenadas.length, `${filtro}-${busqueda}-${orden}`)
   const visibles = paginar(ordenadas)
 
   return (
