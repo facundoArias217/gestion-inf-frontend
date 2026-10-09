@@ -120,6 +120,26 @@ async function crearMock(datos) {
   return conLatencia(nuevo)
 }
 
+async function duplicarMock(id) {
+  const armado = armados.find((a) => a.id === id)
+  if (!armado) {
+    return errorConLatencia('Armado no encontrado')
+  }
+  if (armado.componentes.length === 0) {
+    return errorConLatencia('El armado no tiene componentes para duplicar')
+  }
+
+  return crearMock({
+    nombre: `${armado.nombre} (copia)`,
+    descripcion: armado.descripcion,
+    clienteId: null,
+    componentes: armado.componentes.map((componente) => ({
+      productoId: componente.productoId,
+      cantidad: componente.cantidad,
+    })),
+  })
+}
+
 async function actualizarMock(id, datos) {
   const armado = armados.find((a) => a.id === id)
   if (!armado) {
@@ -217,4 +237,12 @@ export async function finalizarArmado(id) {
     return respuesta.data ?? respuesta
   }
   return finalizarMock(id)
+}
+
+export async function duplicarArmado(id) {
+  if (isIntegrated('armados')) {
+    const respuesta = await api.post(`/armados/${id}/duplicar`)
+    return respuesta.data ?? respuesta
+  }
+  return duplicarMock(id)
 }

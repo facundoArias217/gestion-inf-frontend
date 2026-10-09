@@ -210,10 +210,64 @@ export async function rechazarPresupuesto(id) {
   return cambiarEstadoMock(id, 'RECHAZADO')
 }
 
+async function duplicarMock(id) {
+  const presupuesto = presupuestos.find((p) => p.id === id)
+  if (!presupuesto) {
+    return errorConLatencia('Presupuesto no encontrado')
+  }
+  if (presupuesto.detalles.length === 0 && presupuesto.armadoId == null) {
+    return errorConLatencia(
+      'El presupuesto no tiene productos ni armado para duplicar',
+    )
+  }
+
+  const productos = await listarProductos()
+  const precios = {}
+  for (const detalle of presupuesto.detalles) {
+    const producto = productos.find((p) => p.id === detalle.productoId)
+    precios[detalle.productoId] = producto ? producto.precio : detalle.precioUnitario
+  }
+
+  const hoy = new Date().toISOString().slice(0, 10)
+  const vence = new Date(Date.now() + 2 * 86400000)
+    .toISOString()
+    .slice(0, 10)
+  const ahora = new Date().toISOString()
+
+  const nuevo = {
+    id: presupuestos.length
+      ? Math.max(...presupuestos.map((p) => p.id)) + 1
+      : 1,
+    clienteId: presupuesto.clienteId,
+    armadoId: presupuesto.armadoId,
+    fecha: hoy,
+    fechaVencimiento: vence,
+    estado: 'PENDIENTE',
+    detalles: presupuesto.detalles.map((detalle, i) => ({
+      id: i + 1,
+      productoId: detalle.productoId,
+      cantidad: detalle.cantidad,
+      precioUnitario: precios[detalle.productoId],
+    })),
+    createdAt: ahora,
+    updatedAt: ahora,
+  }
+  presupuestos.push(nuevo)
+  return conLatencia(nuevo)
+}
+
 export async function convertirPresupuesto(id) {
   if (isIntegrated('presupuestos')) {
     const respuesta = await api.post(`/presupuestos/${id}/convertir`)
     return respuesta.data ?? respuesta
   }
   return convertirMock(id)
+}
+
+export async function duplicarPresupuesto(id) {
+  if (isIntegrated('presupuestos')) {
+    const respuesta = await api.post(`/presupuestos/${id}/duplicar`)
+    return respuesta.data ?? respuesta
+  }
+  return duplicarMock(id)
 }

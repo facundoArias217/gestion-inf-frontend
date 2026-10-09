@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
+  Copy,
   Cpu,
   Eye,
   MoreHorizontal,
@@ -43,7 +44,7 @@ import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { formatCurrency } from '@/lib/format'
 import ArmadoDetalleDialog from '../components/armado-detalle-dialog'
 import FinalizarArmadoDialog from '../components/finalizar-armado-dialog'
-import { listarArmados } from '../services'
+import { duplicarArmado, listarArmados } from '../services'
 
 const FILTROS = [
   { valor: 'todas', label: 'Todas' },
@@ -150,6 +151,16 @@ function ArmadosPage() {
 
     return ordenarListado(porEstado, orden)
   }, [armados, filtro, orden])
+
+  const duplicar = async (armado) => {
+    try {
+      const copia = await duplicarArmado(armado.id)
+      toast.success(`Armado «${copia.nombre}» creado en BORRADOR`)
+      navigate(`/armados/${copia.id}/editar`)
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
 
   return (
     <div className="grid gap-4">
@@ -290,6 +301,25 @@ function ArmadosPage() {
                               >
                                 <CheckCircle2 className="size-4" />
                                 Finalizar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                        {armado.estado === 'FINALIZADO' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Acciones de ${armado.nombre}`}
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => duplicar(armado)}>
+                                <Copy className="size-4" />
+                                Duplicar
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

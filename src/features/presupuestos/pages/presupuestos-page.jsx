@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Eye, FileText, MoreHorizontal, Plus, Printer, ShoppingCart, XCircle } from 'lucide-react'
+import { CheckCircle2, Copy, Eye, FileText, MoreHorizontal, Plus, Printer, ShoppingCart, XCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -45,6 +45,7 @@ import ConvertirPresupuestoDialog from '../components/convertir-presupuesto-dial
 import RechazarPresupuestoDialog from '../components/rechazar-presupuesto-dialog'
 import {
   aceptarPresupuesto,
+  duplicarPresupuesto,
   listarPresupuestos,
 } from '../services'
 
@@ -198,6 +199,18 @@ function PresupuestosPage() {
     try {
       await aceptarPresupuesto(presupuesto.id)
       toast.success(`Presupuesto #${presupuesto.id} aceptado`)
+      recargarPresupuestos()
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+  const duplicar = async (presupuesto) => {
+    try {
+      const nuevo = await duplicarPresupuesto(presupuesto.id)
+      toast.success(
+        `Presupuesto #${nuevo.id} creado con precios actuales (vence el ${nuevo.fechaVencimiento})`,
+      )
       recargarPresupuestos()
     } catch (error) {
       toast.error(error.message)
@@ -387,6 +400,12 @@ function PresupuestosPage() {
                             >
                               <Printer className="size-4" />
                               Imprimir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => duplicar(presupuesto)}
+                            >
+                              <Copy className="size-4" />
+                              Duplicar (recotizar)
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
