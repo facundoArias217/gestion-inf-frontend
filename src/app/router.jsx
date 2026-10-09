@@ -9,6 +9,7 @@ import CategoriasPage from '../features/categorias/pages/categorias-page'
 import ClientesPage from '../features/clientes/pages/clientes-page'
 import ComprasPage from '../features/compras/pages/compras-page'
 import CompraRegistroPage from '../features/compras/pages/compra-registro-page'
+import PagosPage from '../features/pagos/pages/pagos-page'
 import ProductosPage from '../features/productos/pages/productos-page'
 import ProveedoresPage from '../features/proveedores/pages/proveedores-page'
 import PresupuestosPage from '../features/presupuestos/pages/presupuestos-page'
@@ -26,14 +27,6 @@ function InicioRedirect() {
 function PlaceholderAdmin({ titulo }) {
   return (
     <RequireRole roles={['ADMIN']}>
-      <PlaceholderPage titulo={titulo} />
-    </RequireRole>
-  )
-}
-
-function PlaceholderAmbos({ titulo }) {
-  return (
-    <RequireRole roles={['ADMIN', 'VENDEDOR']}>
       <PlaceholderPage titulo={titulo} />
     </RequireRole>
   )
@@ -109,7 +102,14 @@ export default function Router() {
               </RequireRole>
             }
           />
-          <Route path="pagos" element={<PlaceholderAmbos titulo="Pagos" />} />
+          <Route
+            path="pagos"
+            element={
+              <RequireRole roles={['ADMIN', 'VENDEDOR']}>
+                <PagosPage />
+              </RequireRole>
+            }
+          />
           <Route
             path="clientes"
             element={
