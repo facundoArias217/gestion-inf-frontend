@@ -7,6 +7,7 @@ import Buscador from '@/components/buscador'
 import ComboboxBuscable from '@/components/combobox-buscable'
 import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
+import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +33,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarCategorias } from '@/features/categorias/services'
 import { useAuth } from '@/hooks/use-auth'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { usePaginacion } from '@/hooks/use-paginacion'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency } from '@/lib/format'
@@ -59,6 +61,7 @@ function ProductosPage() {
   const [productoBaja, setProductoBaja] = useState(null)
 
   useDocumentTitle('Productos')
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarProductos = useCallback(() => {
     listarProductos()
@@ -156,6 +159,8 @@ function ProductosPage() {
       toast.error(error.message)
     }
   }
+
+  const visibles = paginar(filtrados)
 
   return (
     <div className="grid gap-4">
@@ -280,7 +285,7 @@ function ProductosPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtrados.map((producto) => (
+                visibles.map((producto) => (
                   <TableRow key={producto.id}>
                     <TableCell className="font-medium">
                       {producto.nombre}
@@ -351,6 +356,7 @@ function ProductosPage() {
               )}
             </TableBody>
           </Table>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} onPaginaChange={setPagina} />
         </CardContent>
       </Card>
 

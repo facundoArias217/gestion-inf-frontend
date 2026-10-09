@@ -7,6 +7,7 @@ import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
 import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
+import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +33,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { usePaginacion } from '@/hooks/use-paginacion'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha } from '@/lib/format'
@@ -64,6 +66,7 @@ function VentasPage() {
   const [ventaCancelar, setVentaCancelar] = useState(null)
 
   useDocumentTitle('Ventas')
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(ordenadas.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarVentas = useCallback(() => {
     listarVentas()
@@ -139,6 +142,8 @@ function VentasPage() {
 
     return ordenarListado(porBusqueda, orden)
   }, [ventas, filtro, busqueda, orden, clientesPorId])
+
+  const visibles = paginar(ordenadas)
 
   return (
     <div className="grid gap-4">
@@ -227,7 +232,7 @@ function VentasPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                ordenadas.map((venta) => (
+                visibles.map((venta) => (
                   <TableRow key={venta.id}>
                     <TableCell>{formatFecha(venta.fecha)}</TableCell>
                     <TableCell className="font-medium">
@@ -285,6 +290,7 @@ function VentasPage() {
               )}
             </TableBody>
           </Table>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} onPaginaChange={setPagina} />
         </CardContent>
       </Card>
 

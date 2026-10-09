@@ -6,6 +6,7 @@ import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
 import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
+import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +32,7 @@ import {
 import { listarClientes } from '@/features/clientes/services'
 import { listarVentas } from '@/features/ventas/services'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { usePaginacion } from '@/hooks/use-paginacion'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha } from '@/lib/format'
@@ -54,6 +56,7 @@ function PagosPage() {
   const [registroAbierto, setRegistroAbierto] = useState(false)
 
   useDocumentTitle('Pagos')
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   useEffect(() => {
     let cancelado = false
@@ -127,6 +130,8 @@ function PagosPage() {
       .then(setPagos)
       .catch((error) => toast.error(error.message))
   }
+
+  const visibles = paginar(filtrados)
 
   return (
     <div className="grid gap-4">
@@ -224,7 +229,7 @@ function PagosPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtrados.map((pago) => {
+                visibles.map((pago) => {
                   const venta = ventas.find((v) => v.id === pago.ventaId)
                   const cliente = venta
                     ? clientesPorId.get(venta.clienteId)
@@ -256,6 +261,7 @@ function PagosPage() {
               )}
             </TableBody>
           </Table>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} onPaginaChange={setPagina} />
         </CardContent>
       </Card>
 

@@ -7,6 +7,7 @@ import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
 import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
+import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,6 +41,7 @@ import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { usePaginacion } from '@/hooks/use-paginacion'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha, formatVencimiento } from '@/lib/format'
 import PresupuestoDetalleDialog from '../components/presupuesto-detalle-dialog'
@@ -109,6 +111,7 @@ function PresupuestosPage() {
   const [presupuestoConvertir, setPresupuestoConvertir] = useState(null)
 
   useDocumentTitle('Presupuestos')
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarPresupuestos = useCallback(() => {
     listarPresupuestos()
@@ -224,6 +227,8 @@ function PresupuestosPage() {
     }
   }
 
+  const visibles = paginar(filtrados)
+
   return (
     <div className="grid gap-4">
       <PageHeader
@@ -321,7 +326,7 @@ function PresupuestosPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtrados.map((presupuesto) => {
+                visibles.map((presupuesto) => {
                   const armado = presupuesto.armadoId
                     ? armados.find((a) => a.id === presupuesto.armadoId)
                     : null
@@ -432,6 +437,7 @@ function PresupuestosPage() {
               )}
             </TableBody>
           </Table>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} onPaginaChange={setPagina} />
         </CardContent>
       </Card>
 

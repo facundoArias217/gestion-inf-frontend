@@ -7,6 +7,7 @@ import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
 import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
+import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +33,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listarProveedores } from '@/features/proveedores/services'
 import { listarProductos } from '@/features/productos/services'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { usePaginacion } from '@/hooks/use-paginacion'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha } from '@/lib/format'
@@ -67,6 +69,7 @@ function ComprasPage() {
   const [compraCancelar, setCompraCancelar] = useState(null)
 
   useDocumentTitle('Compras')
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(ordenadas.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarCompras = useCallback(() => {
     listarCompras()
@@ -139,6 +142,8 @@ function ComprasPage() {
 
     return ordenarListado(porBusqueda, orden)
   }, [compras, filtro, busqueda, orden, proveedoresPorId])
+
+  const visibles = paginar(ordenadas)
 
   return (
     <div className="grid gap-4">
@@ -227,7 +232,7 @@ function ComprasPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                ordenadas.map((compra) => (
+                visibles.map((compra) => (
                   <TableRow key={compra.id}>
                     <TableCell>{formatFecha(compra.fecha)}</TableCell>
                     <TableCell className="font-medium">
@@ -288,6 +293,7 @@ function ComprasPage() {
               )}
             </TableBody>
           </Table>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} onPaginaChange={setPagina} />
         </CardContent>
       </Card>
 

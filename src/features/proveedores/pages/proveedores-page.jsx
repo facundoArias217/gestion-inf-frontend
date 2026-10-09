@@ -6,6 +6,7 @@ import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
 import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
+import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { usePaginacion } from '@/hooks/use-paginacion'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCuit } from '@/lib/format'
@@ -53,6 +55,7 @@ function ProveedoresPage() {
   const [proveedorBaja, setProveedorBaja] = useState(null)
 
   useDocumentTitle('Proveedores')
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarProveedores = useCallback(() => {
     listarProveedores()
@@ -126,6 +129,8 @@ function ProveedoresPage() {
       toast.error(error.message)
     }
   }
+
+  const visibles = paginar(filtrados)
 
   return (
     <div className="grid gap-4">
@@ -215,7 +220,7 @@ function ProveedoresPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtrados.map((proveedor) => (
+                visibles.map((proveedor) => (
                   <TableRow key={proveedor.id}>
                     <TableCell className="font-medium">
                       {proveedor.razonSocial}
@@ -277,6 +282,7 @@ function ProveedoresPage() {
               )}
             </TableBody>
           </Table>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} onPaginaChange={setPagina} />
         </CardContent>
       </Card>
 

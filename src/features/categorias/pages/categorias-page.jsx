@@ -6,6 +6,7 @@ import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
 import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
+import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,6 +31,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { usePaginacion } from '@/hooks/use-paginacion'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import BajaCategoriaDialog from '../components/baja-categoria-dialog'
@@ -54,6 +56,7 @@ function CategoriasPage() {
   const [orden, setOrden] = useOrden('categorias')
 
   useDocumentTitle('Categorías')
+  const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtradas.length, `${filtro}-${busqueda}-${orden}`)
 
   const recargarCategorias = useCallback(() => {
     listarCategorias()
@@ -126,6 +129,8 @@ function CategoriasPage() {
       toast.error(error.message)
     }
   }
+
+  const visibles = paginar(filtradas)
 
   return (
     <div className="grid gap-4">
@@ -225,7 +230,7 @@ function CategoriasPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtradas.map((categoria) => (
+                visibles.map((categoria) => (
                   <TableRow key={categoria.id}>
                     <TableCell className="font-medium">
                       {categoria.nombre}
@@ -282,6 +287,7 @@ function CategoriasPage() {
               )}
             </TableBody>
           </Table>
+          <Paginacion pagina={pagina} totalPaginas={totalPaginas} onPaginaChange={setPagina} />
         </CardContent>
       </Card>
 
