@@ -1,8 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
-import PlaceholderPage from '../components/placeholder-page'
 import { useAuth } from '../hooks/use-auth'
 import LoginPage from '../features/auth/pages/login-page'
+import DashboardPage from '../features/dashboard/pages/dashboard-page'
 import ArmadosPage from '../features/armados/pages/armados-page'
 import ArmadoFormPage from '../features/armados/pages/armado-form-page'
 import CategoriasPage from '../features/categorias/pages/categorias-page'
@@ -25,14 +25,6 @@ function InicioRedirect() {
   return <Navigate to={isAdmin ? '/dashboard' : '/ventas'} replace />
 }
 
-function PlaceholderAdmin({ titulo }) {
-  return (
-    <RequireRole roles={['ADMIN']}>
-      <PlaceholderPage titulo={titulo} />
-    </RequireRole>
-  )
-}
-
 export default function Router() {
   return (
     <BrowserRouter>
@@ -46,7 +38,14 @@ export default function Router() {
           }
         >
           <Route index element={<InicioRedirect />} />
-          <Route path="dashboard" element={<PlaceholderAdmin titulo="Dashboard" />} />
+          <Route
+            path="dashboard"
+            element={
+              <RequireRole roles={['ADMIN']}>
+                <DashboardPage />
+              </RequireRole>
+            }
+          />
           <Route
             path="ventas"
             element={
