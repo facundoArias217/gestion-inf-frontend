@@ -1,9 +1,9 @@
 export const ARMADOS_MOCK = [
   {
     id: 1,
-    nombre: 'PC Gamer Pro de Lucas',
+    nombre: 'PC Gamer Pro',
     descripcion: 'Build gaming de gama alta con RTX 4060',
-    clienteId: 3,
+    clienteId: null,
     estado: 'FINALIZADO',
     componentes: [
       { id: 1, productoId: 1, cantidad: 1, precioUnitario: 305000 },
@@ -38,7 +38,7 @@ export const ARMADOS_MOCK = [
     id: 3,
     nombre: 'PC Workstation de Diseño',
     descripcion: 'Para trabajo de diseño y edición de video',
-    clienteId: 5,
+    clienteId: null,
     estado: 'FINALIZADO',
     componentes: [
       { id: 14, productoId: 1, cantidad: 1, precioUnitario: 305000 },
@@ -54,9 +54,9 @@ export const ARMADOS_MOCK = [
   },
   {
     id: 4,
-    nombre: 'Configuración pendiente de González',
+    nombre: 'Configuración pendiente',
     descripcion: 'Completa, lista para finalizar',
-    clienteId: 1,
+    clienteId: null,
     estado: 'BORRADOR',
     componentes: [
       { id: 21, productoId: 2, cantidad: 1, precioUnitario: 285000 },
@@ -68,38 +68,5 @@ export const ARMADOS_MOCK = [
     ],
     createdAt: '2026-10-05T09:00:00.000Z',
     updatedAt: '2026-10-05T09:00:00.000Z',
-  },
-  {
-    id: 5,
-    nombre: 'Armado a medias',
-    descripcion: 'Solo CPU y gabinete por ahora',
-    clienteId: null,
-    estado: 'BORRADOR',
-    componentes: [
-      { id: 27, productoId: 1, cantidad: 1, precioUnitario: 305000 },
-      { id: 28, productoId: 14, cantidad: 1, precioUnitario: 82000 },
-    ],
-    createdAt: '2026-10-06T10:00:00.000Z',
-    updatedAt: '2026-10-06T10:00:00.000Z',
-  },
-  {
-    id: 6,
-    nombre: 'Build streamer con extras',
-    descripcion: 'Con GPU, cooler y mouse incluidos',
-    clienteId: 7,
-    estado: 'BORRADOR',
-    componentes: [
-      { id: 29, productoId: 1, cantidad: 1, precioUnitario: 305000 },
-      { id: 30, productoId: 3, cantidad: 1, precioUnitario: 210000 },
-      { id: 31, productoId: 6, cantidad: 2, precioUnitario: 145000 },
-      { id: 32, productoId: 7, cantidad: 1, precioUnitario: 620000 },
-      { id: 33, productoId: 10, cantidad: 1, precioUnitario: 95000 },
-      { id: 34, productoId: 12, cantidad: 1, precioUnitario: 105000 },
-      { id: 35, productoId: 15, cantidad: 1, precioUnitario: 56000 },
-      { id: 36, productoId: 19, cantidad: 1, precioUnitario: 55000 },
-      { id: 37, productoId: 16, cantidad: 1, precioUnitario: 78000 },
-    ],
-    createdAt: '2026-10-07T14:00:00.000Z',
-    updatedAt: '2026-10-07T14:00:00.000Z',
   },
 ]
