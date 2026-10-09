@@ -13,7 +13,7 @@ const MODULOS_VALIDOS = [
   'usuarios',
 ];
 
-const integrados = new Set(['auth', 'categorias', 'productos', 'clientes', 'proveedores', 'compras', 'ventas', 'armados', 'presupuestos']);
+const integrados = new Set(['auth', 'categorias', 'productos', 'clientes', 'proveedores', 'compras', 'ventas', 'armados', 'presupuestos', 'pagos']);
 
 function validarModulo(modulo) {
   if (!MODULOS_VALIDOS.includes(modulo)) {
