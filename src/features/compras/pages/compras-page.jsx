@@ -199,7 +199,7 @@ function ComprasPage() {
                       <EmptyState
                         icono={PackagePlus}
                         titulo="Todavía no hay compras"
-                        descripcion="La primera compra a un proveedor queda PENDIENTE hasta confirmarla (RN-COM-01)."
+                        descripcion="La primera compra a un proveedor queda PENDIENTE hasta confirmarla."
                         accion={{ icono: Plus, label: 'Registrar la primera' }}
                         onAccion={() => navigate('/compras/nueva')}
                       />

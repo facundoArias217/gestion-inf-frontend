@@ -119,7 +119,7 @@ function UsuarioFormDialog({ open, onOpenChange, usuario, onGuardado }) {
           <DialogDescription>
             {esEdicion
               ? 'Dejá la clave vacía para mantener la actual.'
-              : 'Usuarios internos con rol Administrador o Vendedor (RN-USR-01).'}
+              : 'Usuarios internos con rol Administrador o Vendedor.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

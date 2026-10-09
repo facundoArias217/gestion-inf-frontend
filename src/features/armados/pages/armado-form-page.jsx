@@ -207,7 +207,7 @@ function ArmadoFormPage() {
     }
     const producto = productosPorId.get(slot.productoId)
     if (producto && slot.cantidad > producto.stock) {
-      return `Stock insuficiente (disponible: ${producto.stock}) — RN-STK-01`
+      return `Stock insuficiente (disponible: ${producto.stock})`
     }
     return null
   }
@@ -581,8 +581,8 @@ function ArmadoFormPage() {
                   </ul>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Las advertencias son informativas y no impiden guardar
-                  (RN-ARM-02). La completitud se exige al finalizar.
+                  Las advertencias son informativas y no impiden guardar. La
+                  completitud se exige al finalizar.
                 </p>
               </div>
 

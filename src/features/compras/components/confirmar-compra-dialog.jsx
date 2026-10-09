@@ -42,7 +42,7 @@ function ConfirmarCompraDialog({
           <AlertDialogTitle>¿Confirmar la compra #{compra?.id}?</AlertDialogTitle>
           <AlertDialogDescription>
             La compra pasa a COMPLETADA y el stock de cada producto aumentará
-            según las cantidades del detalle (RN-COM-02). Esta acción no se
+            según las cantidades del detalle. Esta acción no se
             puede revertir.
           </AlertDialogDescription>
         </AlertDialogHeader>

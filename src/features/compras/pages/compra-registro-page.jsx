@@ -189,7 +189,7 @@ function CompraRegistroPage() {
               </CardTitle>
               <CardDescription>
                 La compra se registra PENDIENTE y no modifica el stock hasta
-                confirmarse (RN-COM-01).
+                confirmarse.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">

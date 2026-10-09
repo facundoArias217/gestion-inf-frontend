@@ -42,7 +42,7 @@ function CancelarCompraDialog({
           <AlertDialogTitle>¿Cancelar la compra #{compra?.id}?</AlertDialogTitle>
           <AlertDialogDescription>
             La compra pasa a CANCELADA y no afecta el stock, porque nunca
-            llegó a confirmarse (RN-COM-03). Esta acción no se puede revertir.
+            llegó a confirmarse. Esta acción no se puede revertir.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

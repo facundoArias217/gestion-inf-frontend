@@ -221,7 +221,7 @@ function PresupuestosPage() {
     <div className="grid gap-4">
       <PageHeader
         titulo="Presupuestos"
-        descripcion="Cotizaciones para clientes con vencimiento y estados. La conversión en venta reverifica stock (RN-PRE-04/05)."
+        descripcion="Cotizaciones para clientes con vencimiento y estados. La conversión en venta reverifica stock."
         acciones={
           <Button onClick={() => navigate('/presupuestos/nuevo')}>
             <Plus className="size-4" />

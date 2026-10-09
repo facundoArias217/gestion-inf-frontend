@@ -72,8 +72,8 @@ function PresupuestoDetalleDialog({
               {armado.componentes.length} componentes
             </p>
             <p>
-              Los componentes viven en el armado y no se copian al detalle
-              (RN-ARM-05). Total del armado: {formatCurrency(totalArmado)}
+              Los componentes viven en el armado y no se copian al detalle.
+              Total del armado: {formatCurrency(totalArmado)}
             </p>
           </div>
         )}

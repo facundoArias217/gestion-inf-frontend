@@ -123,7 +123,7 @@ function UsuariosPage() {
     <div className="grid gap-4">
       <PageHeader
         titulo="Usuarios"
-        descripcion="Usuarios internos con roles Administrador y Vendedor (RF-USR-01). Las bajas son lógicas: el Histórico permite reactivar."
+        descripcion="Usuarios internos con roles Administrador y Vendedor. Las bajas son lógicas: el Histórico permite reactivar."
         acciones={
           <Button onClick={abrirAlta}>
             <Plus className="size-4" />

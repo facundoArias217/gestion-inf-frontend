@@ -126,7 +126,7 @@ function CategoriasPage() {
         descripcion={
           isAdmin
             ? 'Clasificación de los productos del catálogo.'
-            : 'Consulta del catálogo en modo solo-lectura (RN-USR-03).'
+            : 'Consulta del catálogo en modo solo-lectura.'
         }
         acciones={
           isAdmin && (

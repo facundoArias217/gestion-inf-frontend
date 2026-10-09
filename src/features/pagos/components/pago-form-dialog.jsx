@@ -141,7 +141,7 @@ function PagoFormDialog({ open, onOpenChange, ventas, clientes, onRegistrado }) 
           <DialogTitle>Registrar cobro</DialogTitle>
           <DialogDescription>
             Pago simulado: registra medio, monto y resultado del cobro de una
-            venta COMPLETADA. El pago no modifica stock (RN-PAG-03).
+            venta COMPLETADA. El pago no modifica stock.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

@@ -260,7 +260,7 @@ function PresupuestoRegistroPage() {
               </CardTitle>
               <CardDescription>
                 Un presupuesto pertenece a un cliente y se genera con productos
-                sueltos y/o un armado FINALIZADO (RN-PRE-01, RN-ARM-04). Nace
+                sueltos y/o un armado FINALIZADO. Nace
                 PENDIENTE con vencimiento.
               </CardDescription>
             </CardHeader>
@@ -407,7 +407,7 @@ function PresupuestoRegistroPage() {
                     </p>
                     <p>
                       Los componentes viven en el armado y no se copian al
-                      detalle (RN-ARM-05). Total del armado:{' '}
+                      detalle. Total del armado:{' '}
                       {formatCurrency(totalArmado)}
                     </p>
                   </div>
@@ -529,9 +529,8 @@ function PresupuestoRegistroPage() {
                       {stockBajo && (
                         <p className="text-sm text-amber-600 sm:col-span-4">
                           ⚠ Stock insuficiente de {producto.nombre}{' '}
-                          (disponible: {producto.stock}) — informativo
-                          (RN-ARM-03): la disponibilidad se re-verifica al
-                          confirmar la venta.
+                          (disponible: {producto.stock}) — informativo: la
+                          disponibilidad se re-verifica al confirmar la venta.
                         </p>
                       )}
                     </div>

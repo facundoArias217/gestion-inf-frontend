@@ -123,7 +123,7 @@ function PagosPage() {
     <div className="grid gap-4">
       <PageHeader
         titulo="Pagos"
-        descripcion="Registro interno del cobro de las ventas (pago simulado). Un RECHAZADO permite reintentar; el pago nunca toca stock (RN-PAG-03)."
+        descripcion="Registro interno del cobro de las ventas (pago simulado). Un RECHAZADO permite reintentar; el pago nunca toca stock."
         acciones={
           <Button onClick={() => setRegistroAbierto(true)}>
             <Plus className="size-4" />

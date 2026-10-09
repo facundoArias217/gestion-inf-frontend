@@ -42,7 +42,7 @@ function CancelarVentaDialog({
           <AlertDialogTitle>¿Cancelar la venta #{venta?.id}?</AlertDialogTitle>
           <AlertDialogDescription>
             La venta pasa a CANCELADA y el stock vendido se reintegra
-            transaccionalmente (RN-VTA-03). Esta acción no se puede revertir.
+            transaccionalmente. Esta acción no se puede revertir.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

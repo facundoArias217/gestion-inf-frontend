@@ -44,7 +44,7 @@ function RechazarPresupuestoDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             El presupuesto pasa a RECHAZADO: el cliente no aceptó la
-            propuesta. Esta acción no se puede revertir (RN-PRE-06).
+            propuesta. Esta acción no se puede revertir.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

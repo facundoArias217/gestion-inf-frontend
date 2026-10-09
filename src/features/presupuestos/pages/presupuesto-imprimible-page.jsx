@@ -266,7 +266,7 @@ function PresupuestoImprimiblePage() {
             <p>
               Los precios son válidos hasta el{' '}
               {formatFecha(presupuesto.fechaVencimiento)}; luego se requiere
-              una recotización (RN-PRE-03). La disponibilidad de stock se
+              una recotización. La disponibilidad de stock se
               verifica al confirmar la venta.
             </p>
           </footer>

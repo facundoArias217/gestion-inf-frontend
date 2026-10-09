@@ -39,7 +39,7 @@ function BajaUsuarioDialog({ open, onOpenChange, usuario, onBajaConfirmada }) {
           </AlertDialogTitle>
           <AlertDialogDescription>
             El usuario pasa al Histórico: su login queda bloqueado y puede
-            reactivarse después (baja lógica, RFN-01/02). No podés desactivar
+            reactivarse después (baja lógica). No podés desactivar
             tu propio usuario.
           </AlertDialogDescription>
         </AlertDialogHeader>

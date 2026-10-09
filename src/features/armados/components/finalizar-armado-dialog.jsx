@@ -56,7 +56,7 @@ function FinalizarArmadoDialog({
           <AlertDialogTitle>¿Finalizar «{armado?.nombre}»?</AlertDialogTitle>
           <AlertDialogDescription>
             Al finalizar, el armado queda congelado y puede asociarse a un
-            presupuesto (RN-ARM-04).
+            presupuesto.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -106,8 +106,8 @@ function FinalizarArmadoDialog({
             )}
             {advertencias.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                Las advertencias son informativas y no impiden la finalización
-                (RN-ARM-02).
+                Las advertencias son informativas y no impiden la
+                finalización.
               </p>
             )}
           </div>

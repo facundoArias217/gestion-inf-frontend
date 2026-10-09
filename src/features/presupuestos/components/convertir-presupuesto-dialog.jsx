@@ -55,16 +55,15 @@ function ConvertirPresupuestoDialog({
             {vencido ? (
               <>
                 El presupuesto está <strong>vencido</strong>: se convertirá con
-                los precios de lista <strong>actuales</strong> (recotización,
-                RN-PRE-03) y el stock se reverifica al confirmar (RN-STK-03).
-                El presupuesto conserva sus precios históricos.
+                los precios de lista <strong>actuales</strong> (recotización) y
+                el stock se reverifica al confirmar. El presupuesto conserva
+                sus precios históricos.
               </>
             ) : (
               <>
                 Se crea una venta COMPLETADA con los precios históricos de la
-                cotización (RN-PRE-05) y los componentes del armado como líneas
-                (RN-ARM-05). El stock se reverifica antes de confirmar
-                (RN-STK-03) y la conversión es única (RN-PRE-04).
+                cotización y los componentes del armado como líneas. El stock
+                se reverifica antes de confirmar y la conversión es única.
               </>
             )}
           </AlertDialogDescription>

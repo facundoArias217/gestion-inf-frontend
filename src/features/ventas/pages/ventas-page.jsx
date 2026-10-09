@@ -196,7 +196,7 @@ function VentasPage() {
                       <EmptyState
                         icono={ShoppingCart}
                         titulo="Todavía no hay ventas"
-                        descripcion="La primera venta descuenta stock en el mismo acto (RN-VTA-01)."
+                        descripcion="La primera venta descuenta stock en el mismo acto."
                         accion={{ icono: Plus, label: 'Registrar la primera' }}
                         onAccion={() => navigate('/ventas/nueva')}
                       />

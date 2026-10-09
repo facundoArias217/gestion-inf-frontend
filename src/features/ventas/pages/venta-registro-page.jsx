@@ -220,7 +220,7 @@ function VentaRegistroPage() {
               </CardTitle>
               <CardDescription>
                 La venta se registra COMPLETADA y descuenta stock en el mismo
-                acto (RN-VTA-01). Se verifica el stock disponible de cada
+                acto. Se verifica el stock disponible de cada
                 producto antes de confirmar.
               </CardDescription>
             </CardHeader>
@@ -391,8 +391,7 @@ function VentaRegistroPage() {
                       </Button>
                       {disponible !== null && (
                         <p className="text-sm text-destructive sm:col-span-5">
-                          Stock insuficiente (disponible: {disponible}) —
-                          RN-STK-01
+                          Stock insuficiente (disponible: {disponible})
                         </p>
                       )}
                     </div>

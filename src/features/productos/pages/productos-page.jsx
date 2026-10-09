@@ -173,7 +173,7 @@ function ProductosPage() {
         descripcion={
           isAdmin
             ? 'Catálogo centralizado de la tienda: productos sueltos y componentes para armados.'
-            : 'Consulta del catálogo en modo solo-lectura (RN-USR-03).'
+            : 'Consulta del catálogo en modo solo-lectura.'
         }
         acciones={
           isAdmin && (
