@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -159,7 +159,6 @@ function ClientesPage() {
                 {filtrados.length} de {clientes.length} clientes
               </p>
             </div>
-            <OrdenSelect orden={orden} onOrdenChange={setOrden} />
             <Buscador
               valor={busqueda}
               onValorChange={setBusqueda}
@@ -170,7 +169,7 @@ function ClientesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Apellido y nombre</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="nombre">Apellido y nombre</TableHeadOrdenable>
                 <TableHead>CUIT/CUIL</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="hidden lg:table-cell">Teléfono</TableHead>

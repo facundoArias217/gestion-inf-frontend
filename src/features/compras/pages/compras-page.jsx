@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -45,11 +45,6 @@ const FILTROS = [
   { valor: 'PENDIENTE', label: 'Pendientes' },
   { valor: 'COMPLETADA', label: 'Completadas' },
   { valor: 'CANCELADA', label: 'Canceladas' },
-]
-
-const ORDENES_COMPRAS = [
-  { valor: 'fecha-desc', label: 'Más recientes primero' },
-  { valor: 'fecha-asc', label: 'Más antiguos primero' },
 ]
 
 const totalDe = (compra) =>
@@ -174,11 +169,6 @@ function ComprasPage() {
                 {ordenadas.length} de {compras.length} compras
               </p>
             </div>
-            <OrdenSelect
-              orden={orden}
-              onOrdenChange={setOrden}
-              opciones={ORDENES_COMPRAS}
-            />
             <Buscador
               valor={busqueda}
               onValorChange={setBusqueda}
@@ -189,7 +179,7 @@ function ComprasPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Fecha</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="fecha">Fecha</TableHeadOrdenable>
                 <TableHead>Proveedor</TableHead>
                 <TableHead className="text-right">Ítems</TableHead>
                 <TableHead className="text-right">Total</TableHead>

@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -58,11 +58,6 @@ const ESTADOS_FILTRO = [
   { valor: 'ACEPTADO', label: 'Aceptados' },
   { valor: 'RECHAZADO', label: 'Rechazados' },
   { valor: 'CONVERTIDO', label: 'Convertidos' },
-]
-
-const ORDENES_PRESUPUESTOS = [
-  { valor: 'fecha-desc', label: 'Más recientes primero' },
-  { valor: 'fecha-asc', label: 'Más antiguas primero' },
 ]
 
 function hoyISO() {
@@ -267,11 +262,6 @@ function PresupuestosPage() {
                 {filtrados.length} de {presupuestos.length} presupuestos
               </p>
             </div>
-            <OrdenSelect
-              orden={orden}
-              onOrdenChange={setOrden}
-              opciones={ORDENES_PRESUPUESTOS}
-            />
             <Buscador
               valor={busqueda}
               onValorChange={setBusqueda}
@@ -282,7 +272,7 @@ function PresupuestosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Fecha</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="fecha">Fecha</TableHeadOrdenable>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Armado</TableHead>
                 <TableHead className="text-right">Total</TableHead>

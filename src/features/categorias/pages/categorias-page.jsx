@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -162,7 +162,6 @@ function CategoriasPage() {
                 {filtradas.length} de {categorias.length} categorías
               </p>
             </div>
-            <OrdenSelect orden={orden} onOrdenChange={setOrden} />
             <Buscador
               valor={busqueda}
               onValorChange={setBusqueda}
@@ -173,7 +172,7 @@ function CategoriasPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="nombre">Nombre</TableHeadOrdenable>
                 <TableHead className="hidden lg:table-cell">Descripción</TableHead>
                 <TableHead>Estado</TableHead>
                 {isAdmin && (

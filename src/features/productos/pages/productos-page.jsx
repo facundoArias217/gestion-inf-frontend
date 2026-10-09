@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
 import ComboboxBuscable from '@/components/combobox-buscable'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -43,17 +43,6 @@ const FILTROS = [
   { valor: 'todas', label: 'Todas' },
   { valor: 'activas', label: 'Activas' },
   { valor: 'historico', label: 'Histórico' },
-]
-
-const ORDENES_PRODUCTOS = [
-  { valor: 'nombre-asc', label: 'Nombre A-Z' },
-  { valor: 'nombre-desc', label: 'Nombre Z-A' },
-  { valor: 'fecha-asc', label: 'Más antiguos primero' },
-  { valor: 'fecha-desc', label: 'Más nuevos primero' },
-  { valor: 'precio-asc', label: 'Menor precio primero' },
-  { valor: 'precio-desc', label: 'Mayor precio primero' },
-  { valor: 'stock-asc', label: 'Menos stock primero' },
-  { valor: 'stock-desc', label: 'Más stock primero' },
 ]
 
 function ProductosPage() {
@@ -218,11 +207,6 @@ function ProductosPage() {
                 placeholder="Buscar categoría…"
                 textoTrigger="Todas las categorías"
               />
-              <OrdenSelect
-                orden={orden}
-                onOrdenChange={setOrden}
-                opciones={ORDENES_PRODUCTOS}
-              />
               <Buscador
                 valor={busqueda}
                 onValorChange={setBusqueda}
@@ -234,11 +218,11 @@ function ProductosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="nombre">Nombre</TableHeadOrdenable>
                 <TableHead className="hidden lg:table-cell">Marca</TableHead>
                 <TableHead className="hidden lg:table-cell">Categoría</TableHead>
-                <TableHead>Precio</TableHead>
-                <TableHead>Stock</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="precio">Precio</TableHeadOrdenable>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="stock">Stock</TableHeadOrdenable>
                 <TableHead>Estado</TableHead>
                 {isAdmin && (
                   <TableHead className="w-12 text-right">Acciones</TableHead>

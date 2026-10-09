@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -52,11 +52,6 @@ const FILTROS = [
   { valor: 'todas', label: 'Todas' },
   { valor: 'BORRADOR', label: 'Borradores' },
   { valor: 'FINALIZADO', label: 'Finalizados' },
-]
-
-const ORDENES_ARMADOS = [
-  { valor: 'fecha-desc', label: 'Más recientes primero' },
-  { valor: 'fecha-asc', label: 'Más antiguos primero' },
 ]
 
 const totalDe = (armado) =>
@@ -206,11 +201,6 @@ function ArmadosPage() {
                 {filtrados.length} de {armados.length} armados
               </p>
             </div>
-            <OrdenSelect
-              orden={orden}
-              onOrdenChange={setOrden}
-              opciones={ORDENES_ARMADOS}
-            />
             <Buscador
               valor={busqueda}
               onValorChange={setBusqueda}
@@ -221,7 +211,7 @@ function ArmadosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nombre</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="nombre">Nombre</TableHeadOrdenable>
                 <TableHead>Cliente</TableHead>
                 <TableHead className="text-right">Componentes</TableHead>
                 <TableHead className="text-right">Total</TableHead>

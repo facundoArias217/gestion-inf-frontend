@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -40,13 +40,6 @@ const FILTROS = [
   { valor: 'todas', label: 'Todas' },
   { valor: 'activas', label: 'Activas' },
   { valor: 'historico', label: 'Histórico' },
-]
-
-const ORDENES_PROVEEDORES = [
-  { valor: 'nombre-asc', label: 'Razón social A-Z' },
-  { valor: 'nombre-desc', label: 'Razón social Z-A' },
-  { valor: 'fecha-asc', label: 'Más antiguos primero' },
-  { valor: 'fecha-desc', label: 'Más nuevos primero' },
 ]
 
 function ProveedoresPage() {
@@ -163,11 +156,6 @@ function ProveedoresPage() {
                 {filtrados.length} de {proveedores.length} proveedores
               </p>
             </div>
-            <OrdenSelect
-              orden={orden}
-              onOrdenChange={setOrden}
-              opciones={ORDENES_PROVEEDORES}
-            />
             <Buscador
               valor={busqueda}
               onValorChange={setBusqueda}
@@ -178,7 +166,7 @@ function ProveedoresPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Razón social</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="nombre">Razón social</TableHeadOrdenable>
                 <TableHead>CUIT/CUIL</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="hidden lg:table-cell">Teléfono</TableHead>

@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
-import OrdenSelect from '@/components/orden-select'
+import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -41,11 +41,6 @@ const RESULTADOS_FILTRO = [
   { valor: 'todas', label: 'Todos los resultados' },
   { valor: 'APROBADO', label: 'Aprobados' },
   { valor: 'RECHAZADO', label: 'Rechazados' },
-]
-
-const ORDENES_PAGOS = [
-  { valor: 'fecha-desc', label: 'Más recientes primero' },
-  { valor: 'fecha-asc', label: 'Más antiguos primero' },
 ]
 
 function PagosPage() {
@@ -171,11 +166,6 @@ function PagosPage() {
                 {filtrados.length} de {pagos.length} pagos
               </p>
             </div>
-            <OrdenSelect
-              orden={orden}
-              onOrdenChange={setOrden}
-              opciones={ORDENES_PAGOS}
-            />
             <Buscador
               valor={busqueda}
               onValorChange={setBusqueda}
@@ -186,7 +176,7 @@ function PagosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Fecha</TableHead>
+                <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="fecha">Fecha</TableHeadOrdenable>
                 <TableHead>Venta</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Medio</TableHead>
