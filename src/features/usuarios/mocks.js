@@ -1,0 +1,32 @@
+export const USUARIOS_FE_MOCK = [
+  {
+    id: 1,
+    nombre: 'Facundo',
+    apellido: 'Arias',
+    email: 'admin@tienda.com',
+    rol: 'ADMIN',
+    activo: true,
+    createdAt: '2026-09-29T17:20:00.000Z',
+    updatedAt: '2026-09-29T17:20:00.000Z',
+  },
+  {
+    id: 2,
+    nombre: 'María',
+    apellido: 'Gómez',
+    email: 'vendedor@tienda.com',
+    rol: 'VENDEDOR',
+    activo: true,
+    createdAt: '2026-09-29T17:20:00.000Z',
+    updatedAt: '2026-09-29T17:20:00.000Z',
+  },
+  {
+    id: 3,
+    nombre: 'Sofía',
+    apellido: 'Torres',
+    email: 'vendedor2@tienda.com',
+    rol: 'VENDEDOR',
+    activo: false,
+    createdAt: '2026-09-15T10:00:00.000Z',
+    updatedAt: '2026-09-29T18:00:00.000Z',
+  },
+]

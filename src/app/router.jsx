@@ -12,6 +12,7 @@ import CompraRegistroPage from '../features/compras/pages/compra-registro-page'
 import PagosPage from '../features/pagos/pages/pagos-page'
 import ProductosPage from '../features/productos/pages/productos-page'
 import ProveedoresPage from '../features/proveedores/pages/proveedores-page'
+import UsuariosPage from '../features/usuarios/pages/usuarios-page'
 import PresupuestosPage from '../features/presupuestos/pages/presupuestos-page'
 import PresupuestoRegistroPage from '../features/presupuestos/pages/presupuesto-registro-page'
 import VentasPage from '../features/ventas/pages/ventas-page'
@@ -158,7 +159,14 @@ export default function Router() {
               </RequireRole>
             }
           />
-          <Route path="usuarios" element={<PlaceholderAdmin titulo="Usuarios" />} />
+          <Route
+            path="usuarios"
+            element={
+              <RequireRole roles={['ADMIN']}>
+                <UsuariosPage />
+              </RequireRole>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
