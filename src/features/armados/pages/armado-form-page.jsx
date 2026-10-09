@@ -11,6 +11,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import ProductoCombobox from '@/components/producto-combobox'
 import {
   Card,
   CardContent,
@@ -445,28 +446,15 @@ function ArmadoFormPage() {
                         <span className="text-destructive"> *</span>
                       )}
                     </p>
-                    <Select
-                      value={
-                        slot.productoId == null
-                          ? undefined
-                          : String(slot.productoId)
+                    <ProductoCombobox
+                      className="w-full sm:w-56"
+                      productos={productosDelSlot(slot)}
+                      valor={
+                        slot.productoId == null ? '' : String(slot.productoId)
                       }
-                      onValueChange={(valor) => elegirProducto(indice, valor)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleccioná un producto" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {productosDelSlot(slot).map((productoOpcion) => (
-                          <SelectItem
-                            key={productoOpcion.id}
-                            value={String(productoOpcion.id)}
-                          >
-                            {productoOpcion.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onValorChange={(valor) => elegirProducto(indice, valor)}
+                      placeholder="Buscar producto…"
+                    />
                     <Input
                       type="number"
                       min="1"

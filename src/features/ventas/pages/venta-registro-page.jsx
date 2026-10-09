@@ -7,6 +7,8 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
+import ClienteCombobox from '@/components/cliente-combobox'
+import ProductoCombobox from '@/components/producto-combobox'
 import {
   Card,
   CardContent,
@@ -23,13 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { listarCategorias } from '@/features/categorias/services'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { formatCurrency } from '@/lib/format'
@@ -78,6 +74,7 @@ function VentaRegistroPage() {
   const navigate = useNavigate()
   const [clientes, setClientes] = useState([])
   const [productos, setProductos] = useState([])
+  const [categorias, setCategorias] = useState([])
 
   const form = useForm({
     resolver: zodResolver(ventaSchema),
@@ -122,10 +119,24 @@ function VentaRegistroPage() {
         }
       })
 
+    listarCategorias()
+      .then((datos) => {
+        if (!cancelado) {
+          setCategorias(datos)
+        }
+      })
+      .catch(() => {})
+
     return () => {
       cancelado = true
     }
   }, [])
+
+  const categoriasPorId = useMemo(() => {
+    const mapa = new Map()
+    categorias.forEach((categoria) => mapa.set(categoria.id, categoria))
+    return mapa
+  }, [categorias])
 
   const productosActivos = useMemo(
     () => productos.filter((producto) => producto.activo),
@@ -232,30 +243,14 @@ function VentaRegistroPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cliente</FormLabel>
-                      <Select
-                        onValueChange={(valor) => field.onChange(Number(valor))}
-                        value={
-                          Number.isNaN(field.value)
-                            ? undefined
-                            : String(field.value)
+                      <ClienteCombobox
+                        className="w-full"
+                        clientes={clientes}
+                        valor={
+                          Number.isNaN(field.value) ? '' : String(field.value)
                         }
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Seleccioná un cliente" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clientes.map((cliente) => (
-                            <SelectItem
-                              key={cliente.id}
-                              value={String(cliente.id)}
-                            >
-                              {cliente.apellido}, {cliente.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValorChange={(valor) => field.onChange(Number(valor))}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -316,32 +311,22 @@ function VentaRegistroPage() {
                         render={({ field: campo }) => (
                           <FormItem>
                             <FormLabel className="sm:hidden">Producto</FormLabel>
-                            <Select
-                              onValueChange={(valor) => {
-                                campo.onChange(Number(valor))
-                              }}
-                              value={
+                            <ProductoCombobox
+                              className="w-full"
+                              productos={disponibles}
+                              grupoDe={(producto) =>
+                                categoriasPorId.get(producto.categoriaId)
+                                  ?.nombre
+                              }
+                              valor={
                                 Number.isNaN(campo.value)
-                                  ? undefined
+                                  ? ''
                                   : String(campo.value)
                               }
-                            >
-                              <FormControl>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Seleccioná un producto" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {disponibles.map((producto) => (
-                                  <SelectItem
-                                    key={producto.id}
-                                    value={String(producto.id)}
-                                  >
-                                    {producto.nombre}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              onValorChange={(valor) => {
+                                campo.onChange(Number(valor))
+                              }}
+                            />
                             <FormMessage />
                           </FormItem>
                         )}

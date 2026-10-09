@@ -31,8 +31,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { listarArmados } from '@/features/armados/services'
+import { listarCategorias } from '@/features/categorias/services'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
+import ClienteCombobox from '@/components/cliente-combobox'
+import ProductoCombobox from '@/components/producto-combobox'
 import { formatCurrency } from '@/lib/format'
 import { crearPresupuesto } from '../services'
 
@@ -97,6 +100,7 @@ function PresupuestoRegistroPage() {
   const [clientes, setClientes] = useState([])
   const [productos, setProductos] = useState([])
   const [armados, setArmados] = useState([])
+  const [categorias, setCategorias] = useState([])
   const [vigencia, setVigencia] = useState(VIGENCIA_DEFAULT)
   const [vencePersonalizado, setVencePersonalizado] = useState(hoy())
   const [armadoElegidoId, setArmadoElegidoId] = useState(null)
@@ -123,11 +127,12 @@ function PresupuestoRegistroPage() {
 
     async function cargar() {
       try {
-        const [clientesDatos, productosDatos, armadosDatos] =
+        const [clientesDatos, productosDatos, armadosDatos, categoriasDatos] =
           await Promise.all([
             listarClientes(),
             listarProductos(),
             listarArmados(),
+            listarCategorias(),
           ])
 
         if (cancelado) {
@@ -137,6 +142,7 @@ function PresupuestoRegistroPage() {
         setClientes(clientesDatos)
         setProductos(productosDatos)
         setArmados(armadosDatos.filter((a) => a.estado === 'FINALIZADO'))
+        setCategorias(categoriasDatos)
       } catch (error) {
         if (!cancelado) {
           toast.error(error.message ?? 'No se pudieron cargar los datos')
@@ -156,6 +162,12 @@ function PresupuestoRegistroPage() {
     productos.forEach((producto) => mapa.set(producto.id, producto))
     return mapa
   }, [productos])
+
+  const categoriasPorId = useMemo(() => {
+    const mapa = new Map()
+    categorias.forEach((categoria) => mapa.set(categoria.id, categoria))
+    return mapa
+  }, [categorias])
 
   const armadosPorId = useMemo(() => {
     const mapa = new Map()
@@ -272,30 +284,14 @@ function PresupuestoRegistroPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cliente</FormLabel>
-                      <Select
-                        onValueChange={(valor) => field.onChange(Number(valor))}
-                        value={
-                          Number.isNaN(field.value)
-                            ? undefined
-                            : String(field.value)
+                      <ClienteCombobox
+                        className="w-full"
+                        clientes={clientes}
+                        valor={
+                          Number.isNaN(field.value) ? '' : String(field.value)
                         }
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Seleccioná un cliente" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clientes.map((cliente) => (
-                            <SelectItem
-                              key={cliente.id}
-                              value={String(cliente.id)}
-                            >
-                              {cliente.apellido}, {cliente.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValorChange={(valor) => field.onChange(Number(valor))}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -457,40 +453,29 @@ function PresupuestoRegistroPage() {
                         render={({ field: campo }) => (
                           <FormItem>
                             <FormLabel className="sm:hidden">Producto</FormLabel>
-                            <Select
-                              onValueChange={(valor) => campo.onChange(Number(valor))}
-                              value={
+                            <ProductoCombobox
+                              className="w-full"
+                              productos={productos.filter(
+                                (productoOpcion) =>
+                                  productoOpcion.id === elegido ||
+                                  !(detalles ?? []).some(
+                                    (detalle) =>
+                                      detalle?.productoId === productoOpcion.id,
+                                  ),
+                              )}
+                              grupoDe={(productoOpcion) =>
+                                categoriasPorId.get(productoOpcion.categoriaId)
+                                  ?.nombre
+                              }
+                              valor={
                                 Number.isNaN(campo.value)
-                                  ? undefined
+                                  ? ''
                                   : String(campo.value)
                               }
-                            >
-                              <FormControl>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Seleccioná un producto" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {productos
-                                  .filter(
-                                    (productoOpcion) =>
-                                      productoOpcion.id === elegido ||
-                                      !(detalles ?? []).some(
-                                        (detalle) =>
-                                          detalle?.productoId ===
-                                          productoOpcion.id,
-                                      ),
-                                  )
-                                  .map((productoOpcion) => (
-                                    <SelectItem
-                                      key={productoOpcion.id}
-                                      value={String(productoOpcion.id)}
-                                    >
-                                      {productoOpcion.nombre}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
+                              onValorChange={(valor) =>
+                                campo.onChange(Number(valor))
+                              }
+                            />
                             <FormMessage />
                           </FormItem>
                         )}

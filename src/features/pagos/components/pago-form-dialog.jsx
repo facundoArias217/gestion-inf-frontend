@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import ComboboxBuscable from '@/components/combobox-buscable'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -156,34 +157,29 @@ function PagoFormDialog({ open, onOpenChange, ventas, clientes, onRegistrado }) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Venta</FormLabel>
-                  <Select
-                    onValueChange={alElegirVenta}
-                    value={
-                      Number.isNaN(field.value) ? undefined : String(field.value)
+                  <ComboboxBuscable
+                    className="w-full sm:w-[unset]"
+                    items={ventasCompletadas.map((venta) => {
+                      const cliente = clientes.find(
+                        (c) => c.id === venta.clienteId,
+                      )
+                      return {
+                        valor: String(venta.id),
+                        label: `#${venta.id} · ${
+                          cliente
+                            ? `${cliente.apellido}, ${cliente.nombre}`
+                            : 'Cliente'
+                        } · ${formatCurrency(totalDeVenta(venta))}`,
+                        keywords: `${cliente?.apellido ?? ''} ${cliente?.nombre ?? ''}`,
+                      }
+                    })}
+                    valor={
+                      Number.isNaN(field.value) ? '' : String(field.value)
                     }
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Seleccioná una venta COMPLETADA" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {ventasCompletadas.map((venta) => {
-                        const cliente = clientes.find(
-                          (c) => c.id === venta.clienteId,
-                        )
-                        return (
-                          <SelectItem key={venta.id} value={String(venta.id)}>
-                            #{venta.id} ·{' '}
-                            {cliente
-                              ? `${cliente.apellido}, ${cliente.nombre}`
-                              : 'Cliente'}{' '}
-                            · {formatCurrency(totalDeVenta(venta))}
-                          </SelectItem>
-                        )
-                      })}
-                    </SelectContent>
-                  </Select>
+                    onValorChange={alElegirVenta}
+                    placeholder="Buscar venta…"
+                    textoTrigger="Seleccioná una venta COMPLETADA"
+                  />
                   <FormMessage />
                 </FormItem>
               )}

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
 import Buscador from '@/components/buscador'
+import ComboboxBuscable from '@/components/combobox-buscable'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -19,13 +20,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -210,22 +204,20 @@ function ProductosPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
-                <SelectTrigger
-                  className="w-full sm:w-44"
-                  aria-label="Filtrar por categoría"
-                >
-                  <SelectValue placeholder="Categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas las categorías</SelectItem>
-                  {categorias.map((categoria) => (
-                    <SelectItem key={categoria.id} value={String(categoria.id)}>
-                      {categoria.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <ComboboxBuscable
+                className="sm:w-44"
+                items={[
+                  { valor: 'todas', label: 'Todas las categorías' },
+                  ...categorias.map((categoria) => ({
+                    valor: String(categoria.id),
+                    label: categoria.nombre,
+                  })),
+                ]}
+                valor={categoriaFiltro}
+                onValorChange={setCategoriaFiltro}
+                placeholder="Buscar categoría…"
+                textoTrigger="Todas las categorías"
+              />
               <OrdenSelect
                 orden={orden}
                 onOrdenChange={setOrden}
