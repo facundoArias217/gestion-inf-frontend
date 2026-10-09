@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -41,6 +42,7 @@ import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency } from '@/lib/format'
 import ArmadoDetalleDialog from '../components/armado-detalle-dialog'
 import FinalizarArmadoDialog from '../components/finalizar-armado-dialog'
@@ -72,6 +74,7 @@ function ArmadosPage() {
   const [categorias, setCategorias] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('armados', 'fecha-desc')
   const [armadoDetalle, setArmadoDetalle] = useState(null)
   const [armadoFinalizar, setArmadoFinalizar] = useState(null)
@@ -149,8 +152,20 @@ function ArmadosPage() {
       return armado.estado === filtro
     })
 
-    return ordenarListado(porEstado, orden)
-  }, [armados, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(porEstado, busqueda, [
+      'nombre',
+      'descripcion',
+      (armado) =>
+        armado.clienteId != null
+          ? (() => {
+              const cliente = clientesPorId.get(armado.clienteId)
+              return cliente ? `${cliente.apellido} ${cliente.nombre}` : ''
+            })()
+          : '',
+    ])
+
+    return ordenarListado(porBusqueda, orden)
+  }, [armados, filtro, busqueda, orden, clientesPorId])
 
   const duplicar = async (armado) => {
     try {
@@ -196,6 +211,11 @@ function ArmadosPage() {
               onOrdenChange={setOrden}
               opciones={ORDENES_ARMADOS}
             />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar armados…"
+            />
           </div>
 
           <Table>
@@ -221,7 +241,15 @@ function ArmadosPage() {
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">
-                    {armados.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={Cpu}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : armados.length === 0 ? (
                       <EmptyState
                         icono={Cpu}
                         titulo="Todavía no hay armados"

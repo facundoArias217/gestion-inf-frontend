@@ -3,6 +3,7 @@ import { CreditCard, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -31,6 +32,7 @@ import { listarClientes } from '@/features/clientes/services'
 import { listarVentas } from '@/features/ventas/services'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha } from '@/lib/format'
 import PagoFormDialog from '../components/pago-form-dialog'
 import { listarPagos } from '../services'
@@ -52,6 +54,7 @@ function PagosPage() {
   const [clientes, setClientes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('pagos', 'fecha-desc')
   const [registroAbierto, setRegistroAbierto] = useState(false)
 
@@ -110,8 +113,19 @@ function PagosPage() {
         ? pagos
         : pagos.filter((pago) => pago.resultado === filtro)
 
-    return ordenarListado(porResultado, orden)
-  }, [pagos, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(porResultado, busqueda, [
+      (pago) => {
+        const venta = ventas.find((v) => v.id === pago.ventaId)
+        const cliente = venta ? clientesPorId.get(venta.clienteId) : null
+        return cliente ? `${cliente.apellido} ${cliente.nombre}` : ''
+      },
+      'medioPago',
+      'resultado',
+      (pago) => `#${pago.ventaId}`,
+    ])
+
+    return ordenarListado(porBusqueda, orden)
+  }, [pagos, filtro, busqueda, orden, ventas, clientesPorId])
 
   const recargar = () => {
     listarPagos()
@@ -162,6 +176,11 @@ function PagosPage() {
               onOrdenChange={setOrden}
               opciones={ORDENES_PAGOS}
             />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar pagos…"
+            />
           </div>
 
           <Table>
@@ -187,7 +206,15 @@ function PagosPage() {
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">
-                    {pagos.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={CreditCard}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : pagos.length === 0 ? (
                       <EmptyState
                         icono={CreditCard}
                         titulo="Todavía no hay cobros registrados"

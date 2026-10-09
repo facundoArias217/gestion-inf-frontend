@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -32,6 +33,7 @@ import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha } from '@/lib/format'
 import CancelarVentaDialog from '../components/cancelar-venta-dialog'
 import VentaDetalleDialog from '../components/venta-detalle-dialog'
@@ -61,6 +63,7 @@ function VentasPage() {
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('ventas', 'fecha-desc')
   const [ventaDetalle, setVentaDetalle] = useState(null)
   const [ventaCancelar, setVentaCancelar] = useState(null)
@@ -130,8 +133,17 @@ function VentasPage() {
       return venta.estado === filtro
     })
 
-    return ordenarListado(porEstado, orden)
-  }, [ventas, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(porEstado, busqueda, [
+      (venta) => {
+        const cliente = clientesPorId.get(venta.clienteId)
+        return cliente ? `${cliente.apellido} ${cliente.nombre}` : ''
+      },
+      'estado',
+      (venta) => `#${venta.id}`,
+    ])
+
+    return ordenarListado(porBusqueda, orden)
+  }, [ventas, filtro, busqueda, orden, clientesPorId])
 
   return (
     <div className="grid gap-4">
@@ -167,6 +179,11 @@ function VentasPage() {
               onOrdenChange={setOrden}
               opciones={ORDENES_VENTAS}
             />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar ventas…"
+            />
           </div>
 
           <Table>
@@ -192,7 +209,15 @@ function VentasPage() {
               ) : ordenadas.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">
-                    {ventas.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={ShoppingCart}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : ventas.length === 0 ? (
                       <EmptyState
                         icono={ShoppingCart}
                         titulo="Todavía no hay ventas"

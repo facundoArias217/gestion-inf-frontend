@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -39,6 +40,7 @@ import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { useDocumentTitle } from '@/hooks/use-document-title'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha, formatVencimiento } from '@/lib/format'
 import PresupuestoDetalleDialog from '../components/presupuesto-detalle-dialog'
 import ConvertirPresupuestoDialog from '../components/convertir-presupuesto-dialog'
@@ -105,6 +107,7 @@ function PresupuestosPage() {
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('presupuestos', 'fecha-desc')
   const [presupuestoDetalle, setPresupuestoDetalle] = useState(null)
   const [presupuestoRechazar, setPresupuestoRechazar] = useState(null)
@@ -192,8 +195,17 @@ function PresupuestosPage() {
       return presupuesto.estado === filtro
     })
 
-    return ordenarListado(porEstado, orden)
-  }, [presupuestos, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(porEstado, busqueda, [
+      (presupuesto) => {
+        const cliente = clientesPorId.get(presupuesto.clienteId)
+        return cliente ? `${cliente.apellido} ${cliente.nombre}` : ''
+      },
+      'estado',
+      (presupuesto) => `#${presupuesto.id}`,
+    ])
+
+    return ordenarListado(porBusqueda, orden)
+  }, [presupuestos, filtro, busqueda, orden, clientesPorId])
 
   const aceptar = async (presupuesto) => {
     try {
@@ -260,6 +272,11 @@ function PresupuestosPage() {
               onOrdenChange={setOrden}
               opciones={ORDENES_PRESUPUESTOS}
             />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar presupuestos…"
+            />
           </div>
 
           <Table>
@@ -286,7 +303,15 @@ function PresupuestosPage() {
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="p-0">
-                    {presupuestos.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={FileText}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : presupuestos.length === 0 ? (
                       <EmptyState
                         icono={FileText}
                         titulo="Todavía no hay presupuestos"

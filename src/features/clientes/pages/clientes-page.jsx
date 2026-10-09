@@ -3,6 +3,7 @@ import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw, Users } from 'lucide-
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -29,6 +30,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCuit } from '@/lib/format'
 import BajaClienteDialog from '../components/baja-cliente-dialog'
 import ClienteFormDialog from '../components/cliente-form-dialog'
@@ -44,6 +46,7 @@ function ClientesPage() {
   const [clientes, setClientes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('clientes')
   const [formAbierto, setFormAbierto] = useState(false)
   const [clienteEditando, setClienteEditando] = useState(null)
@@ -95,8 +98,15 @@ function ClientesPage() {
       return true
     })
 
-    return ordenarListado(porEstado, orden, { campoNombre: 'apellido' })
-  }, [clientes, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(porEstado, busqueda, [
+      'nombre',
+      'apellido',
+      'email',
+      'cuil',
+    ])
+
+    return ordenarListado(porBusqueda, orden, { campoNombre: 'apellido' })
+  }, [clientes, filtro, busqueda, orden])
 
   const abrirAlta = () => {
     setClienteEditando(null)
@@ -150,6 +160,11 @@ function ClientesPage() {
               </p>
             </div>
             <OrdenSelect orden={orden} onOrdenChange={setOrden} />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar clientes…"
+            />
           </div>
 
           <Table>
@@ -176,7 +191,15 @@ function ClientesPage() {
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="p-0">
-                    {clientes.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={Users}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : clientes.length === 0 ? (
                       <EmptyState
                         icono={Users}
                         titulo="Todavía no hay clientes"

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -32,6 +33,7 @@ import { listarProveedores } from '@/features/proveedores/services'
 import { listarProductos } from '@/features/productos/services'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha } from '@/lib/format'
 import CancelarCompraDialog from '../components/cancelar-compra-dialog'
 import CompraDetalleDialog from '../components/compra-detalle-dialog'
@@ -63,6 +65,7 @@ function ComprasPage() {
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('compras', 'fecha-desc')
   const [compraDetalle, setCompraDetalle] = useState(null)
   const [compraConfirmar, setCompraConfirmar] = useState(null)
@@ -133,8 +136,14 @@ function ComprasPage() {
       return compra.estado === filtro
     })
 
-    return ordenarListado(porEstado, orden)
-  }, [compras, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(porEstado, busqueda, [
+      (compra) => proveedoresPorId.get(compra.proveedorId)?.razonSocial ?? '',
+      'estado',
+      (compra) => `#${compra.id}`,
+    ])
+
+    return ordenarListado(porBusqueda, orden)
+  }, [compras, filtro, busqueda, orden, proveedoresPorId])
 
   return (
     <div className="grid gap-4">
@@ -170,6 +179,11 @@ function ComprasPage() {
               onOrdenChange={setOrden}
               opciones={ORDENES_COMPRAS}
             />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar compras…"
+            />
           </div>
 
           <Table>
@@ -195,7 +209,15 @@ function ComprasPage() {
               ) : ordenadas.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">
-                    {compras.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={PackagePlus}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : compras.length === 0 ? (
                       <EmptyState
                         icono={PackagePlus}
                         titulo="Todavía no hay compras"

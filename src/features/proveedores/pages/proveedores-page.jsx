@@ -3,6 +3,7 @@ import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw, Truck } from 'lucide-
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -29,6 +30,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCuit } from '@/lib/format'
 import BajaProveedorDialog from '../components/baja-proveedor-dialog'
 import ProveedorFormDialog from '../components/proveedor-form-dialog'
@@ -51,6 +53,7 @@ function ProveedoresPage() {
   const [proveedores, setProveedores] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('proveedores')
   const [formAbierto, setFormAbierto] = useState(false)
   const [proveedorEditando, setProveedorEditando] = useState(null)
@@ -102,8 +105,14 @@ function ProveedoresPage() {
       return true
     })
 
-    return ordenarListado(porEstado, orden, { campoNombre: 'razonSocial' })
-  }, [proveedores, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(porEstado, busqueda, [
+      'razonSocial',
+      'cuit',
+      'email',
+    ])
+
+    return ordenarListado(porBusqueda, orden, { campoNombre: 'razonSocial' })
+  }, [proveedores, filtro, busqueda, orden])
 
   const abrirAlta = () => {
     setProveedorEditando(null)
@@ -159,6 +168,11 @@ function ProveedoresPage() {
               onOrdenChange={setOrden}
               opciones={ORDENES_PROVEEDORES}
             />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar proveedores…"
+            />
           </div>
 
           <Table>
@@ -185,7 +199,15 @@ function ProveedoresPage() {
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="p-0">
-                    {proveedores.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={Truck}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : proveedores.length === 0 ? (
                       <EmptyState
                         icono={Truck}
                         titulo="Todavía no hay proveedores"

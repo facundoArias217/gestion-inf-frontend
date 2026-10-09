@@ -3,6 +3,7 @@ import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw, Tags } from 'lucide-r
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -30,6 +31,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import BajaCategoriaDialog from '../components/baja-categoria-dialog'
 import CategoriaFormDialog from '../components/categoria-form-dialog'
 import { listarCategorias, reactivarCategoria } from '../services'
@@ -45,6 +47,7 @@ function CategoriasPage() {
   const [categorias, setCategorias] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [formAbierto, setFormAbierto] = useState(false)
   const [categoriaEditando, setCategoriaEditando] = useState(null)
   const [categoriaBaja, setCategoriaBaja] = useState(null)
@@ -96,8 +99,13 @@ function CategoriasPage() {
       return categorias
     })()
 
-    return ordenarListado(filtradasPorEstado, orden)
-  }, [categorias, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(filtradasPorEstado, busqueda, [
+      'nombre',
+      'descripcion',
+    ])
+
+    return ordenarListado(porBusqueda, orden)
+  }, [categorias, filtro, busqueda, orden])
 
   const abrirAlta = () => {
     setCategoriaEditando(null)
@@ -155,6 +163,11 @@ function CategoriasPage() {
               </p>
             </div>
             <OrdenSelect orden={orden} onOrdenChange={setOrden} />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar categorías…"
+            />
           </div>
 
           <Table>
@@ -180,7 +193,15 @@ function CategoriasPage() {
               ) : filtradas.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 4 : 3} className="p-0">
-                    {categorias.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={Tags}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : categorias.length === 0 ? (
                       <EmptyState
                         icono={Tags}
                         titulo="Todavía no hay categorías"

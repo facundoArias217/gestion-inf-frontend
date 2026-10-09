@@ -3,6 +3,7 @@ import { Archive, MoreHorizontal, Package, Pencil, Plus, RotateCcw } from 'lucid
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -38,6 +39,7 @@ import { listarCategorias } from '@/features/categorias/services'
 import { useAuth } from '@/hooks/use-auth'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency } from '@/lib/format'
 import BajaProductoDialog from '../components/baja-producto-dialog'
 import ProductoFormDialog from '../components/producto-form-dialog'
@@ -67,6 +69,7 @@ function ProductosPage() {
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
   const [categoriaFiltro, setCategoriaFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
   const [orden, setOrden] = useOrden('productos')
   const [formAbierto, setFormAbierto] = useState(false)
   const [productoEditando, setProductoEditando] = useState(null)
@@ -143,8 +146,13 @@ function ProductosPage() {
             (producto) => String(producto.categoriaId) === categoriaFiltro,
           )
 
-    return ordenarListado(porCategoria, orden)
-  }, [productos, filtro, categoriaFiltro, orden])
+    const porBusqueda = filtrarPorBusqueda(porCategoria, busqueda, [
+      'nombre',
+      'marca',
+    ])
+
+    return ordenarListado(porBusqueda, orden)
+  }, [productos, filtro, categoriaFiltro, busqueda, orden])
 
   const abrirAlta = () => {
     setProductoEditando(null)
@@ -223,6 +231,11 @@ function ProductosPage() {
                 onOrdenChange={setOrden}
                 opciones={ORDENES_PRODUCTOS}
               />
+              <Buscador
+                valor={busqueda}
+                onValorChange={setBusqueda}
+                placeholder="Buscar productos…"
+              />
             </div>
           </div>
 
@@ -252,7 +265,15 @@ function ProductosPage() {
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 7 : 6} className="p-0">
-                    {productos.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={Package}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : productos.length === 0 ? (
                       <EmptyState
                         icono={Package}
                         titulo="Todavía no hay productos"

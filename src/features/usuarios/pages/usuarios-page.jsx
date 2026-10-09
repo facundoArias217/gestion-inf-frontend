@@ -3,6 +3,7 @@ import { Archive, MoreHorizontal, Pencil, Plus, RotateCcw, UserCog } from 'lucid
 import { toast } from 'sonner'
 
 import EmptyState from '@/components/empty-state'
+import Buscador from '@/components/buscador'
 import OrdenSelect from '@/components/orden-select'
 import PageHeader from '@/components/page-header'
 import StatusBadge from '@/components/status-badge'
@@ -30,6 +31,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
+import { filtrarPorBusqueda } from '@/lib/busqueda'
 import BajaUsuarioDialog from '../components/baja-usuario-dialog'
 import UsuarioFormDialog from '../components/usuario-form-dialog'
 import { cambiarEstadoUsuario, listarUsuarios } from '../services'
@@ -45,6 +47,7 @@ function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([])
   const [cargando, setCargando] = useState(true)
   const [filtro, setFiltro] = useState('todos')
+  const [busqueda, setBusqueda] = useState('')
   const [formAbierto, setFormAbierto] = useState(false)
   const [usuarioEditando, setUsuarioEditando] = useState(null)
   const [usuarioBaja, setUsuarioBaja] = useState(null)
@@ -96,8 +99,15 @@ function UsuariosPage() {
       return usuarios
     })()
 
-    return ordenarListado(filtradosPorEstado, orden)
-  }, [usuarios, filtro, orden])
+    const porBusqueda = filtrarPorBusqueda(filtradosPorEstado, busqueda, [
+      'nombre',
+      'apellido',
+      'email',
+      'rol',
+    ])
+
+    return ordenarListado(porBusqueda, orden, { campoNombre: 'apellido' })
+  }, [usuarios, filtro, busqueda, orden])
 
   const abrirAlta = () => {
     setUsuarioEditando(null)
@@ -149,6 +159,11 @@ function UsuariosPage() {
               </p>
             </div>
             <OrdenSelect orden={orden} onOrdenChange={setOrden} />
+            <Buscador
+              valor={busqueda}
+              onValorChange={setBusqueda}
+              placeholder="Buscar usuarios…"
+            />
           </div>
 
           <Table>
@@ -173,7 +188,15 @@ function UsuariosPage() {
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="p-0">
-                    {usuarios.length === 0 ? (
+                    {busqueda ? (
+                      <EmptyState
+                        icono={UserCog}
+                        titulo="No se encontraron resultados para tu búsqueda"
+                        descripcion="Probá con otro término o limpiá la búsqueda."
+                        accion={{ label: 'Limpiar búsqueda', variant: 'outline' }}
+                        onAccion={() => setBusqueda('')}
+                      />
+                    ) : usuarios.length === 0 ? (
                       <EmptyState
                         icono={UserCog}
                         titulo="Todavía no hay usuarios"
