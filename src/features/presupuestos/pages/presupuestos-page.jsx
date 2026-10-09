@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Eye, MoreHorizontal, Plus, XCircle } from 'lucide-react'
+import { CheckCircle2, Eye, MoreHorizontal, Plus, ShoppingCart, XCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -41,6 +41,7 @@ import { listarProductos } from '@/features/productos/services'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { formatCurrency } from '@/lib/format'
 import PresupuestoDetalleDialog from '../components/presupuesto-detalle-dialog'
+import ConvertirPresupuestoDialog from '../components/convertir-presupuesto-dialog'
 import RechazarPresupuestoDialog from '../components/rechazar-presupuesto-dialog'
 import {
   aceptarPresupuesto,
@@ -106,6 +107,7 @@ function PresupuestosPage() {
   const [orden, setOrden] = useOrden('presupuestos', 'fecha-desc')
   const [presupuestoDetalle, setPresupuestoDetalle] = useState(null)
   const [presupuestoRechazar, setPresupuestoRechazar] = useState(null)
+  const [presupuestoConvertir, setPresupuestoConvertir] = useState(null)
 
   const recargarPresupuestos = useCallback(() => {
     listarPresupuestos()
@@ -283,6 +285,7 @@ function PresupuestosPage() {
                     : null
                   const pendienteVigente =
                     presupuesto.estado === 'PENDIENTE' && !estaVencido(presupuesto)
+                  const aceptado = presupuesto.estado === 'ACEPTADO'
 
                   return (
                     <TableRow key={presupuesto.id}>
@@ -319,7 +322,7 @@ function PresupuestosPage() {
                           >
                             <Eye className="size-4" />
                           </Button>
-                          {pendienteVigente && (
+                          {(pendienteVigente || aceptado) && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -331,21 +334,35 @@ function PresupuestosPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => aceptar(presupuesto)}
-                                >
-                                  <CheckCircle2 className="size-4" />
-                                  Aceptar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive"
-                                  onClick={() =>
-                                    setPresupuestoRechazar(presupuesto)
-                                  }
-                                >
-                                  <XCircle className="size-4" />
-                                  Rechazar
-                                </DropdownMenuItem>
+                                {pendienteVigente && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={() => aceptar(presupuesto)}
+                                    >
+                                      <CheckCircle2 className="size-4" />
+                                      Aceptar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() =>
+                                        setPresupuestoRechazar(presupuesto)
+                                      }
+                                    >
+                                      <XCircle className="size-4" />
+                                      Rechazar
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {aceptado && (
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      setPresupuestoConvertir(presupuesto)
+                                    }
+                                  >
+                                    <ShoppingCart className="size-4" />
+                                    Convertir en venta
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -381,6 +398,16 @@ function PresupuestosPage() {
         }}
         presupuesto={presupuestoRechazar}
         onRechazado={recargarPresupuestos}
+      />
+      <ConvertirPresupuestoDialog
+        open={presupuestoConvertir != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setPresupuestoConvertir(null)
+          }
+        }}
+        presupuesto={presupuestoConvertir}
+        onConvertido={recargarPresupuestos}
       />
     </div>
   )

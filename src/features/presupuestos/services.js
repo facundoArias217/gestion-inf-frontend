@@ -60,16 +60,16 @@ async function crearMock({ clienteId, fecha, fechaVencimiento, armadoId, detalle
     )
   }
 
-  if (detalles.length > 0) {
-    const productos = await listarProductos()
-    for (const detalle of detalles) {
-      const producto = productos.find((p) => p.id === detalle.productoId)
-      if (!producto) {
-        return errorConLatencia(
-          `El producto ${detalle.productoId} del detalle no existe`,
-        )
-      }
+  const productos = await listarProductos()
+  const precios = {}
+  for (const detalle of detalles) {
+    const producto = productos.find((p) => p.id === detalle.productoId)
+    if (!producto) {
+      return errorConLatencia(
+        `El producto ${detalle.productoId} del detalle no existe`,
+      )
     }
+    precios[detalle.productoId] = producto.precio
   }
 
   const ahora = new Date().toISOString()
@@ -86,7 +86,7 @@ async function crearMock({ clienteId, fecha, fechaVencimiento, armadoId, detalle
       id: i + 1,
       productoId: detalle.productoId,
       cantidad: detalle.cantidad,
-      precioUnitario: detalle.precioUnitario,
+      precioUnitario: precios[detalle.productoId],
     })),
     createdAt: ahora,
     updatedAt: ahora,
@@ -109,6 +109,69 @@ function cambiarEstadoMock(id, estado) {
   presupuesto.estado = estado
   presupuesto.updatedAt = new Date().toISOString()
   return conLatencia(presupuesto)
+}
+
+async function convertirMock(id) {
+  const presupuesto = presupuestos.find((p) => p.id === id)
+  if (!presupuesto) {
+    return errorConLatencia('Presupuesto no encontrado')
+  }
+  if (presupuesto.estado !== 'ACEPTADO') {
+    return errorConLatencia('Solo se puede convertir un presupuesto ACEPTADO')
+  }
+
+  const hoy = new Date().toISOString().slice(0, 10)
+  const vigente = presupuesto.fechaVencimiento >= hoy
+
+  const lineas = presupuesto.detalles.map((detalle) => ({
+    productoId: detalle.productoId,
+    cantidad: detalle.cantidad,
+    precioUnitario: vigente ? detalle.precioUnitario : null,
+  }))
+
+  if (presupuesto.armadoId != null) {
+    const armados = await listarArmados()
+    const armado = armados.find((a) => a.id === presupuesto.armadoId)
+    if (armado) {
+      for (const componente of armado.componentes) {
+        lineas.push({
+          productoId: componente.productoId,
+          cantidad: componente.cantidad,
+          precioUnitario: vigente ? componente.precioUnitario : null,
+        })
+      }
+    }
+  }
+
+  if (!vigente) {
+    const productos = await listarProductos()
+    for (const linea of lineas) {
+      const producto = productos.find((p) => p.id === linea.productoId)
+      linea.precioUnitario = producto ? producto.precio : linea.precioUnitario
+    }
+  }
+
+  const ahora = new Date().toISOString()
+  const venta = {
+    id: Math.floor(Math.random() * 900) + 100,
+    clienteId: presupuesto.clienteId,
+    presupuestoId: presupuesto.id,
+    fecha: hoy,
+    estado: 'COMPLETADA',
+    detalles: lineas.map((linea, i) => ({
+      id: i + 1,
+      productoId: linea.productoId,
+      cantidad: linea.cantidad,
+      precioUnitario: linea.precioUnitario,
+    })),
+    createdAt: ahora,
+    updatedAt: ahora,
+  }
+
+  presupuesto.estado = 'CONVERTIDO'
+  presupuesto.updatedAt = ahora
+
+  return conLatencia({ venta, presupuesto })
 }
 
 export async function listarPresupuestos() {
@@ -145,4 +208,12 @@ export async function rechazarPresupuesto(id) {
     return respuesta.data ?? respuesta
   }
   return cambiarEstadoMock(id, 'RECHAZADO')
+}
+
+export async function convertirPresupuesto(id) {
+  if (isIntegrated('presupuestos')) {
+    const respuesta = await api.post(`/presupuestos/${id}/convertir`)
+    return respuesta.data ?? respuesta
+  }
+  return convertirMock(id)
 }

@@ -174,10 +174,13 @@ function PresupuestoRegistroPage() {
       )
     : 0
 
-  const subtotalDe = (detalle) =>
-    Number.isFinite(detalle?.cantidad) && Number.isFinite(detalle?.precioUnitario)
-      ? detalle.cantidad * detalle.precioUnitario
-      : 0
+  const subtotalDe = (detalle) => {
+    if (!Number.isFinite(detalle?.cantidad)) {
+      return 0
+    }
+    const producto = productosPorId.get(detalle.productoId)
+    return producto ? detalle.cantidad * producto.precio : 0
+  }
 
   const totalSueltos = (detalles ?? []).reduce(
     (acum, detalle) => acum + subtotalDe(detalle),
