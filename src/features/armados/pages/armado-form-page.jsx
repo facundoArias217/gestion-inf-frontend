@@ -1,44 +1,128 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  AlertTriangle,
   ArrowLeft,
-  CheckCircle2,
-  Plus,
-  Trash2,
-  XCircle,
+  ChevronLeft,
+  ChevronRight,
+  CircuitBoard,
+  ClipboardList,
+  Cpu,
+  Fan,
+  HardDrive,
+  MemoryStick,
+  Monitor,
+  Package,
+  PcCase,
+  Zap,
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import ProductoCombobox from '@/components/producto-combobox'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  CATEGORIAS_OBLIGATORIAS_NOMBRES,
-  obtenerAdvertencias,
-} from '../compatibilidad'
+import ArmadoStepper from '../components/armado-stepper'
+import PasoCategoria from '../components/paso-categoria'
+import PasoOtros from '../components/paso-otros'
+import PasoResumen from '../components/paso-resumen'
+import ProductoDetalleDialog from '../components/producto-detalle-dialog'
+import ResumenArmado from '../components/resumen-armado'
+import { obtenerAdvertencias } from '../compatibilidad'
 import { listarCategorias } from '@/features/categorias/services'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
-import { formatCurrency } from '@/lib/format'
-import { actualizarArmado, crearArmado, listarArmados } from '../services'
+import { actualizarArmado, crearArmado, finalizarArmado, listarArmados } from '../services'
 
-const SIN_SELECCION = 'sin-seleccion'
+const PASOS_BASE = [
+  {
+    titulo: 'Procesador',
+    nombres: ['Procesador'],
+    icono: Cpu,
+    obligatorio: true,
+    unico: true,
+  },
+  {
+    titulo: 'Motherboard',
+    nombres: ['Motherboard'],
+    icono: CircuitBoard,
+    obligatorio: true,
+    unico: true,
+  },
+  {
+    titulo: 'Memoria RAM',
+    nombres: ['Memoria RAM'],
+    icono: MemoryStick,
+    obligatorio: true,
+    unico: false,
+  },
+  {
+    titulo: 'Almacenamiento',
+    nombres: ['Almacenamiento'],
+    icono: HardDrive,
+    obligatorio: true,
+    unico: false,
+  },
+  {
+    titulo: 'Fuente',
+    nombres: ['Fuente'],
+    icono: Zap,
+    obligatorio: true,
+    unico: true,
+  },
+  {
+    titulo: 'Gabinete',
+    nombres: ['Gabinete'],
+    icono: PcCase,
+    obligatorio: true,
+    unico: true,
+  },
+  {
+    titulo: 'Cooler',
+    nombres: ['Refrigeración'],
+    icono: Fan,
+    obligatorio: false,
+    unico: false,
+  },
+  {
+    titulo: 'Placa de video',
+    nombres: ['Placa de video'],
+    icono: Monitor,
+    obligatorio: false,
+    unico: true,
+  },
+]
+
+const PASO_OTROS = { titulo: 'Otros', icono: Package, obligatorio: false, otro: true }
+const PASO_RESUMEN = {
+  titulo: 'Resumen',
+  icono: ClipboardList,
+  obligatorio: false,
+  esResumen: true,
+}
+
+function errorDeSeleccion(seleccion, productosPorId) {
+  const producto = productosPorId.get(seleccion.productoId)
+
+  if (!producto) {
+    return 'Producto no encontrado'
+  }
+  if (seleccion.cantidad == null || Number.isNaN(seleccion.cantidad)) {
+    return 'Ingresá la cantidad'
+  }
+  if (seleccion.cantidad < 1) {
+    return 'Mínimo 1'
+  }
+  if (seleccion.cantidad > producto.stock) {
+    return `Stock insuficiente (disponible: ${producto.stock})`
+  }
+  return null
+}
+
+function itemResumen(seleccion, productosPorId) {
+  const producto = productosPorId.get(seleccion.productoId)
+  return {
+    producto,
+    cantidad: seleccion.cantidad,
+    subtotal: (producto?.precio ?? 0) * (seleccion.cantidad ?? 0),
+  }
+}
 
 function ArmadoFormPage() {
   const { id } = useParams()
@@ -53,8 +137,10 @@ function ArmadoFormPage() {
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [clienteId, setClienteId] = useState(null)
-  const [slots, setSlots] = useState([])
-  const [extraCategoria, setExtraCategoria] = useState(SIN_SELECCION)
+  const [selecciones, setSelecciones] = useState([])
+  const [pasoActual, setPasoActual] = useState(0)
+  const [categoriaOtrosId, setCategoriaOtrosId] = useState(null)
+  const [detalle, setDetalle] = useState(null)
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
@@ -77,16 +163,7 @@ function ArmadoFormPage() {
         setProductos(productosDatos)
         setClientes(clientesDatos)
 
-        const obligatorias = CATEGORIAS_OBLIGATORIAS_NOMBRES.map(
-          (nombreCategoria) =>
-            categoriasDatos.find((c) => c.nombre === nombreCategoria)?.id,
-        ).filter((categoriaId) => categoriaId != null)
-
-        let slotsIniciales = obligatorias.map((categoriaId) => ({
-          categoriaId,
-          productoId: null,
-          cantidad: null,
-        }))
+        let seleccionesIniciales = []
 
         if (esEdicion) {
           const armados = await listarArmados()
@@ -111,32 +188,35 @@ function ArmadoFormPage() {
           setNombre(armado.nombre)
           setDescripcion(armado.descripcion ?? '')
           setClienteId(armado.clienteId ?? null)
+          seleccionesIniciales = armado.componentes.map((componente) => ({
+            productoId: componente.productoId,
+            cantidad: componente.cantidad,
+          }))
 
-          const slotsDelArmado = armado.componentes.map((componente) => {
-            const producto = productosDatos.find(
-              (p) => p.id === componente.productoId,
-            )
-            return {
-              categoriaId: producto.categoriaId,
-              productoId: componente.productoId,
-              cantidad: componente.cantidad,
-            }
-          })
-
-          slotsIniciales = obligatorias.map((categoriaId) => {
-            const slot = slotsDelArmado.find(
-              (s) => s.categoriaId === categoriaId,
-            )
-            return slot ?? { categoriaId, productoId: null, cantidad: null }
-          })
-
-          const extras = slotsDelArmado.filter(
-            (s) => !obligatorias.includes(s.categoriaId),
+          const categoriaDe = (productoId) =>
+            productosDatos.find((p) => p.id === productoId)?.categoriaId
+          const existentes = PASOS_BASE.map((definicion) => ({
+            definicion,
+            categoria: categoriasDatos.find((c) =>
+              definicion.nombres.includes(c.nombre),
+            ),
+          })).filter((paso) => paso.categoria != null)
+          const primerIncompleto = existentes.findIndex(
+            ({ definicion, categoria }) =>
+              definicion.obligatorio &&
+              !seleccionesIniciales.some(
+                (seleccion) =>
+                  categoriaDe(seleccion.productoId) === categoria.id,
+              ),
           )
-          slotsIniciales = [...slotsIniciales, ...extras]
+          setPasoActual(
+            primerIncompleto === -1
+              ? existentes.length + 1
+              : primerIncompleto,
+          )
         }
 
-        setSlots(slotsIniciales)
+        setSelecciones(seleccionesIniciales)
       } catch (error) {
         if (!cancelado) {
           toast.error(error.message ?? 'No se pudieron cargar los datos')
@@ -155,175 +235,329 @@ function ArmadoFormPage() {
     }
   }, [esEdicion, id, navigate])
 
-  const categoriasPorId = useMemo(() => {
-    const mapa = new Map()
-    categorias.forEach((categoria) => mapa.set(categoria.id, categoria))
-    return mapa
-  }, [categorias])
-
-  const productosPorId = useMemo(() => {
-    const mapa = new Map()
-    productos.forEach((producto) => mapa.set(producto.id, producto))
-    return mapa
-  }, [productos])
-
-  const categoriasObligatoriasIds = useMemo(
-    () =>
-      CATEGORIAS_OBLIGATORIAS_NOMBRES.map(
-        (nombreCategoria) =>
-          categorias.find((c) => c.nombre === nombreCategoria)?.id,
-      ).filter((categoriaId) => categoriaId != null),
+  const productosPorId = useMemo(
+    () => new Map(productos.map((producto) => [producto.id, producto])),
+    [productos],
+  )
+  const categoriasPorId = useMemo(
+    () => new Map(categorias.map((categoria) => [categoria.id, categoria])),
     [categorias],
   )
 
-  const categoriasDisponiblesExtras = useMemo(
+  const pasosFijos = useMemo(
     () =>
-      categorias.filter(
-        (categoria) => !categoriasObligatoriasIds.includes(categoria.id),
-      ),
-    [categorias, categoriasObligatoriasIds],
+      PASOS_BASE.map((definicion) => ({
+        ...definicion,
+        categoria: categorias.find((c) =>
+          definicion.nombres.includes(c.nombre),
+        ),
+      })).filter((paso) => paso.categoria != null),
+    [categorias],
   )
 
-  const esObligatorio = (categoriaId) =>
-    categoriasObligatoriasIds.includes(categoriaId)
+  const pasos = useMemo(
+    () => [...pasosFijos, PASO_OTROS, PASO_RESUMEN],
+    [pasosFijos],
+  )
 
-  const productosDelSlot = (slot) =>
-    productos.filter(
-      (producto) =>
-        producto.activo &&
-        producto.categoriaId === slot.categoriaId &&
-        (producto.id === slot.productoId ||
-          !slots.some((s) => s.productoId === producto.id)),
-    )
-
-  const errorDelSlot = (slot) => {
-    if (slot.productoId == null) {
-      return null
-    }
-    if (slot.cantidad == null || Number.isNaN(slot.cantidad)) {
-      return 'Ingresá la cantidad'
-    }
-    if (slot.cantidad < 1) {
-      return 'Mínimo 1'
-    }
-    const producto = productosPorId.get(slot.productoId)
-    if (producto && slot.cantidad > producto.stock) {
-      return `Stock insuficiente (disponible: ${producto.stock})`
-    }
-    return null
-  }
-
-  const slotsLlenos = slots.filter((slot) => slot.productoId != null)
-  const hayErrores =
-    slots.some((slot) => errorDelSlot(slot) !== null) ||
-    slotsLlenos.some((slot) => slot.cantidad == null)
-
-  const total = slotsLlenos.reduce((acum, slot) => {
-    const producto = productosPorId.get(slot.productoId)
-    const cantidad = slot.cantidad ?? 0
-    return acum + (producto ? producto.precio * cantidad : 0)
-  }, 0)
-
-  const completitud = useMemo(
+  const categoriasSeleccionadas = useMemo(
     () =>
-      CATEGORIAS_OBLIGATORIAS_NOMBRES.map((nombreCategoria) => {
-        const categoria = categorias.find(
-          (c) => c.nombre === nombreCategoria,
-        )
-        const presente =
-          categoria != null &&
-          slots.some(
-            (slot) =>
-              slot.categoriaId === categoria.id && slot.productoId != null,
-          )
-        return { nombre: nombreCategoria, presente }
+      new Set(
+        selecciones
+          .map((seleccion) => productosPorId.get(seleccion.productoId)?.categoriaId)
+          .filter((categoriaId) => categoriaId != null),
+      ),
+    [selecciones, productosPorId],
+  )
+
+  const extras = useMemo(
+    () =>
+      selecciones.filter((seleccion) => {
+        const categoriaId = productosPorId.get(seleccion.productoId)?.categoriaId
+        return !pasosFijos.some((paso) => paso.categoria.id === categoriaId)
       }),
-    [categorias, slots],
+    [selecciones, productosPorId, pasosFijos],
+  )
+
+  const faltantes = useMemo(
+    () =>
+      pasosFijos
+        .filter(
+          (paso) =>
+            paso.obligatorio && !categoriasSeleccionadas.has(paso.categoria.id),
+        )
+        .map((paso) => paso.titulo),
+    [pasosFijos, categoriasSeleccionadas],
   )
 
   const advertencias = useMemo(() => {
     if (cargando || productos.length === 0 || categorias.length === 0) {
       return []
     }
+    return obtenerAdvertencias(selecciones, productos, categorias)
+  }, [cargando, selecciones, productos, categorias])
 
-    return obtenerAdvertencias(
-      slots
-        .filter((slot) => slot.productoId != null)
-        .map((slot) => ({
-          productoId: slot.productoId,
-          cantidad: slot.cantidad,
-        })),
-      productos,
-      categorias,
-    )
-  }, [cargando, slots, productos, categorias])
+  const errores = useMemo(
+    () =>
+      selecciones
+        .map((seleccion) => errorDeSeleccion(seleccion, productosPorId))
+        .filter((error) => error != null),
+    [selecciones, productosPorId],
+  )
+  const hayErrores = errores.length > 0
 
-  const actualizarSlot = (indice, cambios) => {
-    setSlots((previos) =>
-      previos.map((slot, i) => (i === indice ? { ...slot, ...cambios } : slot)),
+  const total = useMemo(
+    () =>
+      selecciones.reduce((acum, seleccion) => {
+        const producto = productosPorId.get(seleccion.productoId)
+        return acum + (producto?.precio ?? 0) * (seleccion.cantidad ?? 0)
+      }, 0),
+    [selecciones, productosPorId],
+  )
+
+  const grupos = useMemo(
+    () => [
+      ...pasosFijos.map((paso) => ({
+        titulo: paso.titulo,
+        icono: paso.icono,
+        items: selecciones
+          .filter(
+            (seleccion) =>
+              productosPorId.get(seleccion.productoId)?.categoriaId ===
+              paso.categoria.id,
+          )
+          .map((seleccion) => itemResumen(seleccion, productosPorId)),
+      })),
+      {
+        titulo: 'Otros',
+        icono: Package,
+        items: extras.map((seleccion) => itemResumen(seleccion, productosPorId)),
+      },
+    ],
+    [pasosFijos, selecciones, productosPorId, extras],
+  )
+
+  const pasosStepper = pasos.map((paso) => ({
+    ...paso,
+    completo: paso.otro
+      ? extras.length > 0
+      : categoriasSeleccionadas.has(paso.categoria?.id),
+  }))
+
+  const iconoDeCategoria = (categoriaId) =>
+    pasosFijos.find((paso) => paso.categoria.id === categoriaId)?.icono ??
+    Package
+
+  const seleccionesDelPaso = (paso) =>
+    selecciones
+      .filter(
+        (seleccion) =>
+          productosPorId.get(seleccion.productoId)?.categoriaId ===
+          paso.categoria.id,
+      )
+      .map((seleccion) => ({
+        producto: productosPorId.get(seleccion.productoId),
+        cantidad: seleccion.cantidad,
+        error: errorDeSeleccion(seleccion, productosPorId),
+      }))
+
+  const itemsDelPaso = (paso) => {
+    const categoriaId = paso.otro ? categoriaOtrosId : paso.categoria?.id
+
+    if (categoriaId == null) {
+      return []
+    }
+
+    const idsDelPaso = new Set(
+      selecciones
+        .filter(
+          (seleccion) =>
+            productosPorId.get(seleccion.productoId)?.categoriaId ===
+            categoriaId,
+        )
+        .map((seleccion) => seleccion.productoId),
     )
+
+    return productos
+      .filter((producto) => producto.activo && producto.categoriaId === categoriaId)
+      .map((producto) => {
+        const enEstePaso = idsDelPaso.has(producto.id)
+        const enOtroPaso =
+          !enEstePaso && selecciones.some((s) => s.productoId === producto.id)
+        const sinStock = !enEstePaso && producto.stock === 0
+
+        return {
+          producto,
+          seleccionado: enEstePaso,
+          deshabilitado: enOtroPaso || sinStock,
+          motivo: enOtroPaso
+            ? 'Elegido en otro paso'
+            : sinStock
+              ? 'Sin stock'
+              : undefined,
+        }
+      })
   }
 
-  const elegirProducto = (indice, productoId) => {
-    const producto = productosPorId.get(Number(productoId))
-    actualizarSlot(indice, {
-      productoId: Number(productoId),
-      cantidad: producto ? 1 : null,
+  const categoriasDisponiblesOtros = useMemo(
+    () =>
+      categorias.filter(
+        (categoria) =>
+          categoria.activo &&
+          !pasosFijos.some((paso) => paso.categoria.id === categoria.id),
+      ),
+    [categorias, pasosFijos],
+  )
+
+  const gruposExtras = useMemo(() => {
+    const mapa = new Map()
+
+    extras.forEach((seleccion) => {
+      const producto = productosPorId.get(seleccion.productoId)
+      const categoria = categoriasPorId.get(producto?.categoriaId)
+
+      if (!categoria) {
+        return
+      }
+
+      if (!mapa.has(categoria.id)) {
+        mapa.set(categoria.id, { categoria, selecciones: [] })
+      }
+      mapa
+        .get(categoria.id)
+        .selecciones.push({
+          producto,
+          cantidad: seleccion.cantidad,
+          error: errorDeSeleccion(seleccion, productosPorId),
+        })
     })
-  }
 
-  const quitarSlot = (indice) => {
-    setSlots((previos) => previos.filter((_, i) => i !== indice))
-  }
+    return [...mapa.values()]
+  }, [extras, productosPorId, categoriasPorId])
 
-  const agregarExtra = () => {
-    if (extraCategoria === SIN_SELECCION) {
+  const paso = pasos[pasoActual]
+  const erroresDelPasoActual = paso?.esResumen
+    ? 0
+    : paso?.otro
+      ? gruposExtras.reduce(
+          (acum, grupo) =>
+            acum + grupo.selecciones.filter((s) => s.error != null).length,
+          0,
+        )
+      : seleccionesDelPaso(paso).filter((s) => s.error != null).length
+
+  const puedeFinalizar =
+    selecciones.length > 0 && faltantes.length === 0 && !hayErrores
+
+  const elegirProducto = (pasoDelProducto, producto) => {
+    const yaElegido = selecciones.some((s) => s.productoId === producto.id)
+
+    if (yaElegido) {
+      setSelecciones((previas) =>
+        previas.filter((seleccion) => seleccion.productoId !== producto.id),
+      )
       return
     }
-    const categoriaId = Number(extraCategoria)
-    setSlots((previos) => [
-      ...previos,
-      { categoriaId, productoId: null, cantidad: null },
+
+    const categoriaId = pasoDelProducto.otro
+      ? categoriaOtrosId
+      : pasoDelProducto.categoria.id
+
+    setSelecciones((previas) => [
+      ...previas.filter(
+        (seleccion) =>
+          productosPorId.get(seleccion.productoId)?.categoriaId !== categoriaId ||
+          !pasoDelProducto.unico,
+      ),
+      { productoId: producto.id, cantidad: 1 },
     ])
-    setExtraCategoria(SIN_SELECCION)
   }
 
-  const onSubmit = async (event) => {
-    event.preventDefault()
+  const cambiarCantidad = (productoId, cantidad) => {
+    setSelecciones((previas) =>
+      previas.map((seleccion) =>
+        seleccion.productoId === productoId ? { ...seleccion, cantidad } : seleccion,
+      ),
+    )
+  }
 
+  const quitarSeleccion = (productoId) => {
+    setSelecciones((previas) =>
+      previas.filter((seleccion) => seleccion.productoId !== productoId),
+    )
+  }
+
+  const verDetalle = (producto) => {
+    setDetalle({ producto, icono: iconoDeCategoria(producto.categoriaId) })
+  }
+
+  const validarFormulario = () => {
     if (!nombre.trim()) {
       toast.error('El nombre del armado es obligatorio')
-      return
+      return false
     }
-
-    if (slotsLlenos.length === 0) {
+    if (selecciones.length === 0) {
       toast.error('El armado debe tener al menos un componente')
-      return
+      return false
     }
-
     if (hayErrores) {
-      toast.error('Hay slots con errores: revisá cantidades y stock')
-      return
+      toast.error('Hay componentes con errores: revisá cantidades y stock')
+      return false
     }
+    return true
+  }
 
-    const datos = {
-      nombre,
-      descripcion,
-      clienteId,
-      componentes: slotsLlenos.map((slot) => ({
-        productoId: slot.productoId,
-        cantidad: slot.cantidad,
-      })),
+  const datosArmado = () => ({
+    nombre,
+    descripcion,
+    clienteId,
+    componentes: selecciones,
+  })
+
+  const guardar = async () => {
+    if (!validarFormulario()) {
+      return
     }
 
     setEnviando(true)
     try {
       if (esEdicion) {
-        await actualizarArmado(Number(id), datos)
+        await actualizarArmado(Number(id), datosArmado())
         toast.success('Armado actualizado')
       } else {
-        await crearArmado(datos)
+        await crearArmado(datosArmado())
         toast.success('Armado guardado en estado BORRADOR')
+      }
+      navigate('/armados')
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  const guardarYFinalizar = async () => {
+    if (!validarFormulario()) {
+      return
+    }
+
+    setEnviando(true)
+    try {
+      let armadoId
+
+      if (esEdicion) {
+        await actualizarArmado(Number(id), datosArmado())
+        armadoId = Number(id)
+      } else {
+        const nuevo = await crearArmado(datosArmado())
+        armadoId = nuevo.id
+      }
+
+      try {
+        await finalizarArmado(armadoId)
+        toast.success(`Armado «${nombre.trim()}» finalizado`)
+      } catch (error) {
+        toast.error(error.message)
       }
       navigate('/armados')
     } catch (error) {
@@ -351,254 +585,118 @@ function ArmadoFormPage() {
           <ArrowLeft className="size-4" />
         </Button>
         <h1 className="text-xl font-semibold tracking-tight">
-          {esEdicion ? 'Editar armado' : 'Nuevo armado'}
+          {esEdicion ? 'Editar armado' : 'Armá tu PC paso a paso'}
         </h1>
       </div>
 
-      <form onSubmit={onSubmit} noValidate>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Configuración de la PC
-            </CardTitle>
-            <CardDescription>
-              Elegí al menos un producto por categoría obligatoria. Los slots
-              vacíos se pueden guardar: el armado queda en BORRADOR y la
-              completitud se valida al finalizarlo.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6">
-            <div className="grid gap-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <label htmlFor="nombre" className="text-sm font-medium">
-                    Nombre del armado
-                  </label>
-                  <Input
-                    id="nombre"
-                    placeholder="PC Gamer de Lucas"
-                    value={nombre}
-                    onChange={(event) => setNombre(event.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium">
-                    Cliente (opcional)
-                  </label>
-                  <Select
-                    value={clienteId == null ? SIN_SELECCION : String(clienteId)}
-                    onValueChange={(valor) =>
-                      setClienteId(
-                        valor === SIN_SELECCION ? null : Number(valor),
-                      )
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={SIN_SELECCION}>Sin cliente</SelectItem>
-                      {clientes.map((cliente) => (
-                        <SelectItem key={cliente.id} value={String(cliente.id)}>
-                          {cliente.apellido}, {cliente.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="descripcion" className="text-sm font-medium">
-                  Descripción (opcional)
-                </label>
-                <Textarea
-                  id="descripcion"
-                  placeholder="Para qué va a usar la PC, notas del vendedor…"
-                  rows={2}
-                  value={descripcion}
-                  onChange={(event) => setDescripcion(event.target.value)}
-                />
-              </div>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid content-start gap-6">
+          <ArmadoStepper
+            pasos={pasosStepper}
+            actual={pasoActual}
+            onSeleccion={setPasoActual}
+          />
+
+          {paso.esResumen ? (
+            <PasoResumen
+              esEdicion={esEdicion}
+              grupos={grupos}
+              total={total}
+              faltantes={faltantes}
+              advertencias={advertencias}
+              hayErrores={hayErrores}
+              nombre={nombre}
+              onNombreChange={setNombre}
+              clienteId={clienteId}
+              onClienteIdChange={setClienteId}
+              clientes={clientes}
+              descripcion={descripcion}
+              onDescripcionChange={setDescripcion}
+              puedeFinalizar={puedeFinalizar}
+              enviando={enviando}
+              onGuardar={guardar}
+              onGuardarYFinalizar={guardarYFinalizar}
+              onCancelar={() => navigate('/armados')}
+            />
+          ) : paso.otro ? (
+            <PasoOtros
+              categoriasDisponibles={categoriasDisponiblesOtros}
+              categoriaElegidaId={categoriaOtrosId}
+              onCategoriaElegida={setCategoriaOtrosId}
+              items={itemsDelPaso(paso)}
+              gruposExtras={gruposExtras}
+              onSeleccionar={(producto) => elegirProducto(paso, producto)}
+              onCambiarCantidad={cambiarCantidad}
+              onQuitar={quitarSeleccion}
+              onVerDetalle={verDetalle}
+            />
+          ) : (
+            <PasoCategoria
+              paso={paso}
+              items={itemsDelPaso(paso)}
+              selecciones={seleccionesDelPaso(paso)}
+              onSeleccionar={(producto) => elegirProducto(paso, producto)}
+              onCambiarCantidad={cambiarCantidad}
+              onQuitar={quitarSeleccion}
+              onVerDetalle={verDetalle}
+            />
+          )}
+
+          {!paso.esResumen && (
+            <div className="flex items-center justify-between border-t pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setPasoActual((previo) => Math.max(previo - 1, 0))}
+                disabled={pasoActual === 0}
+              >
+                <ChevronLeft className="size-4" />
+                Anterior
+              </Button>
+              <Button
+                onClick={() =>
+                  setPasoActual((previo) =>
+                    Math.min(previo + 1, pasos.length - 1),
+                  )
+                }
+                disabled={erroresDelPasoActual > 0}
+                title={
+                  erroresDelPasoActual > 0
+                    ? 'Corregí las cantidades o el stock de este paso para continuar'
+                    : undefined
+                }
+              >
+                {pasoActual === pasos.length - 2
+                  ? 'Ir al resumen'
+                  : 'Siguiente'}
+                <ChevronRight className="size-4" />
+              </Button>
             </div>
+          )}
+        </div>
 
-            <div className="grid gap-3">
-              <p className="text-sm font-medium">Componentes</p>
+        <div className="hidden lg:block">
+          <ResumenArmado
+            grupos={grupos}
+            total={total}
+            faltantes={faltantes}
+            advertencias={advertencias}
+          />
+        </div>
+      </div>
 
-              {slots.map((slot, indice) => {
-                const categoria = categoriasPorId.get(slot.categoriaId)
-                const producto = slot.productoId
-                  ? productosPorId.get(slot.productoId)
-                  : null
-                const error = errorDelSlot(slot)
-                const subtotal =
-                  producto && slot.cantidad
-                    ? producto.precio * slot.cantidad
-                    : 0
-
-                return (
-                  <div
-                    key={`${slot.categoriaId}-${indice}`}
-                    className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[10rem_1fr_5rem_8rem_7rem_auto] sm:items-center"
-                  >
-                    <p className="text-sm font-medium">
-                      {categoria?.nombre ?? '—'}
-                      {esObligatorio(slot.categoriaId) && (
-                        <span className="text-destructive"> *</span>
-                      )}
-                    </p>
-                    <ProductoCombobox
-                      className="w-full sm:w-56"
-                      productos={productosDelSlot(slot)}
-                      valor={
-                        slot.productoId == null ? '' : String(slot.productoId)
-                      }
-                      onValorChange={(valor) => elegirProducto(indice, valor)}
-                      placeholder="Buscar producto…"
-                    />
-                    <Input
-                      type="number"
-                      min="1"
-                      step="1"
-                      placeholder="Cant."
-                      disabled={slot.productoId == null}
-                      value={
-                        slot.cantidad == null || Number.isNaN(slot.cantidad)
-                          ? ''
-                          : slot.cantidad
-                      }
-                      onChange={(event) => {
-                        const valor = event.target.value
-                        actualizarSlot(indice, {
-                          cantidad: valor === '' ? null : Number(valor),
-                        })
-                      }}
-                    />
-                    <p className="text-right text-sm text-muted-foreground">
-                      {producto ? formatCurrency(producto.precio) : '—'}
-                    </p>
-                    <p className="text-right text-sm text-muted-foreground">
-                      {formatCurrency(subtotal)}
-                    </p>
-                    {esObligatorio(slot.categoriaId) ? (
-                      <span />
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Quitar componente"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => quitarSlot(indice)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    )}
-                    {error && (
-                      <p className="text-sm text-destructive sm:col-span-6">
-                        {error}
-                      </p>
-                    )}
-                  </div>
-                )
-              })}
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={extraCategoria} onValueChange={setExtraCategoria}>
-                  <SelectTrigger className="w-56">
-                    <SelectValue placeholder="Categoría opcional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={SIN_SELECCION} disabled>
-                      Categoría opcional
-                    </SelectItem>
-                    {categoriasDisponiblesExtras.map((categoria) => (
-                      <SelectItem key={categoria.id} value={String(categoria.id)}>
-                        {categoria.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={agregarExtra}
-                  disabled={extraCategoria === SIN_SELECCION}
-                >
-                  <Plus className="size-4" />
-                  Agregar componente opcional
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Placa de video no es obligatoria (gráficos integrados)
-                </p>
-              </div>
-            </div>
-
-              <div className="grid gap-2 rounded-lg border p-3">
-                <p className="text-sm font-medium">Validación en vivo</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {completitud.map((item) => (
-                    <p
-                      key={item.nombre}
-                      className="flex items-center gap-1.5 text-sm text-muted-foreground"
-                    >
-                      {item.presente ? (
-                        <CheckCircle2 className="size-4 text-green-600" />
-                      ) : (
-                        <XCircle className="size-4 text-destructive" />
-                      )}
-                      {item.nombre}
-                    </p>
-                  ))}
-                </div>
-                {advertencias.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Sin advertencias por ahora.
-                  </p>
-                ) : (
-                  <ul className="grid gap-1">
-                    {advertencias.map((advertencia) => (
-                      <li
-                        key={advertencia}
-                        className="flex items-start gap-2 text-sm text-muted-foreground"
-                      >
-                        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
-                        {advertencia}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Las advertencias son informativas y no impiden guardar. La
-                  completitud se exige al finalizar.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold">
-                Total:{' '}
-                <span className="text-base">{formatCurrency(total)}</span>
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/armados')}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={enviando || hayErrores}>
-                  {enviando
-                    ? 'Guardando…'
-                    : esEdicion
-                      ? 'Guardar cambios'
-                      : 'Guardar armado'}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
+      <ProductoDetalleDialog
+        producto={detalle?.producto}
+        categoria={
+          detalle ? categoriasPorId.get(detalle.producto.categoriaId) : null
+        }
+        icono={detalle?.icono ?? Package}
+        open={detalle != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDetalle(null)
+          }
+        }}
+      />
     </div>
   )
 }
