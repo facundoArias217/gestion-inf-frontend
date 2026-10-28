@@ -39,6 +39,10 @@ function crearMock(datos) {
     precio: datos.precio,
     stock: datos.stock,
     categoriaId: datos.categoriaId,
+    imagenUrl: datos.imagenUrl ?? null,
+    especificaciones: datos.especificaciones
+      ? JSON.parse(JSON.stringify(datos.especificaciones))
+      : null,
     activo: true,
     createdAt: ahora,
     updatedAt: ahora,
@@ -59,6 +63,10 @@ function actualizarMock(id, datos) {
   producto.precio = datos.precio
   producto.stock = datos.stock
   producto.categoriaId = datos.categoriaId
+  producto.imagenUrl = datos.imagenUrl ?? null
+  producto.especificaciones = datos.especificaciones
+    ? JSON.parse(JSON.stringify(datos.especificaciones))
+    : null
   producto.updatedAt = new Date().toISOString()
   return conLatencia(producto)
 }

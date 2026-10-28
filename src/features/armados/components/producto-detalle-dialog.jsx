@@ -74,7 +74,7 @@ function ProductoDetalleDialog({ producto, categoria, icono, open, onOpenChange 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-start gap-4">
             <ImagenDetalle producto={producto} icono={icono} />
@@ -103,7 +103,7 @@ function ProductoDetalleDialog({ producto, categoria, icono, open, onOpenChange 
 
           {specs.length > 0 && (
             <div className="grid gap-2 rounded-lg border p-3">
-              <p className="text-sm font-medium">Especificaciones</p>
+              <p className="text-sm font-medium">Compatibilidad</p>
               <ul className="grid gap-1.5">
                 {specs.map((spec) => (
                   <li
@@ -115,6 +115,31 @@ function ProductoDetalleDialog({ producto, categoria, icono, open, onOpenChange 
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {(producto?.especificaciones ?? []).length > 0 && (
+            <div className="grid gap-3">
+              {producto.especificaciones.map((grupo) => (
+                <div key={grupo.grupo} className="rounded-lg border p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {grupo.grupo}
+                  </p>
+                  <dl className="grid gap-1.5">
+                    {grupo.items.map((fila) => (
+                      <div
+                        key={`${grupo.grupo}-${fila.clave}`}
+                        className="flex items-baseline justify-between gap-3 border-b pb-1.5 text-sm last:border-b-0 last:pb-0"
+                      >
+                        <dt className="shrink-0 text-muted-foreground">
+                          {fila.clave}
+                        </dt>
+                        <dd className="text-right font-medium">{fila.valor}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))}
             </div>
           )}
         </div>

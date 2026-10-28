@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import EditorEspecificaciones from '../components/especificaciones-editor'
 import { actualizarProducto, crearProducto } from '../services'
 
 const productoSchema = z.object({
@@ -53,6 +54,38 @@ const productoSchema = z.object({
     .number({ invalid_type_error: 'Ingresá el stock' })
     .int('El stock debe ser entero')
     .min(0, 'El stock no puede ser negativo'),
+  imagenUrl: z
+    .string()
+    .max(500, 'Máximo 500 caracteres')
+    .refine(
+      (valor) => valor === '' || /^(https?:\/\/\S+|\/\S+)$/.test(valor.trim()),
+      'Usá una URL absoluta (https://…) o una ruta relativa (/uploads/…)',
+    ),
+  especificaciones: z
+    .array(
+      z.object({
+        grupo: z
+          .string()
+          .min(1, 'El grupo es obligatorio')
+          .max(100, 'Máximo 100 caracteres'),
+        items: z
+          .array(
+            z.object({
+              clave: z
+                .string()
+                .min(1, 'La clave es obligatoria')
+                .max(100, 'Máximo 100 caracteres'),
+              valor: z
+                .string()
+                .min(1, 'El valor es obligatorio')
+                .max(200, 'Máximo 200 caracteres'),
+            }),
+          )
+          .min(1, 'El grupo debe tener al menos una fila')
+          .max(30, 'Máximo 30 filas por grupo'),
+      }),
+    )
+    .max(10, 'Máximo 10 grupos'),
 })
 
 function CampoNumero({ field, ...props }) {
@@ -88,6 +121,8 @@ function ProductoFormDialog({
       descripcion: '',
       precio: NaN,
       stock: NaN,
+      imagenUrl: '',
+      especificaciones: [],
     },
   })
 
@@ -100,6 +135,8 @@ function ProductoFormDialog({
         descripcion: producto?.descripcion ?? '',
         precio: producto?.precio ?? NaN,
         stock: producto?.stock ?? NaN,
+        imagenUrl: producto?.imagenUrl ?? '',
+        especificaciones: producto?.especificaciones ?? [],
       })
     }
   }, [open, producto, form])
@@ -112,6 +149,17 @@ function ProductoFormDialog({
       precio: values.precio,
       stock: values.stock,
       categoriaId: values.categoriaId,
+      imagenUrl: values.imagenUrl.trim() || null,
+      especificaciones:
+        values.especificaciones.length > 0
+          ? values.especificaciones.map((grupo) => ({
+              grupo: grupo.grupo.trim(),
+              items: grupo.items.map((fila) => ({
+                clave: fila.clave.trim(),
+                valor: fila.valor.trim(),
+              })),
+            }))
+          : null,
     }
 
     try {
@@ -129,7 +177,7 @@ function ProductoFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {esEdicion ? 'Editar producto' : 'Nuevo producto'}
@@ -253,6 +301,28 @@ function ProductoFormDialog({
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="imagenUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Imagen (URL)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://… o /uploads/productos/…"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-xs text-muted-foreground">
+                    Se muestra en las cards y el detalle; sin imagen se usa un
+                    ícono por categoría. La subida de archivos llega con la
+                    16.1.
+                  </p>
+                </FormItem>
+              )}
+            />
+            <EditorEspecificaciones control={form.control} />
             <DialogFooter>
               <Button
                 type="button"

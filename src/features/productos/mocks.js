@@ -7,6 +7,27 @@ export const PRODUCTOS_MOCK = [
     precio: 305000,
     stock: 8,
     categoriaId: 1,
+    imagenUrl: '/uploads/productos/demo-ryzen-5-7600.png',
+    socket: 'AM5',
+    tipoMemoria: 'DDR5',
+    graficosIntegrados: true,
+    incluyeCooler: true,
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Núcleos', valor: '6' },
+          { clave: 'Hilos', valor: '12' },
+          { clave: 'Frecuencia base', valor: '3.8 GHz' },
+          { clave: 'Frecuencia turbo', valor: '5.1 GHz' },
+          { clave: 'Caché L3', valor: '32 MB' },
+        ],
+      },
+      {
+        grupo: 'REFRIGERACIÓN',
+        items: [{ clave: 'Disipador incluido', valor: 'Wraith Stealth' }],
+      },
+    ],
     activo: true,
     createdAt: '2026-08-05T10:00:00.000Z',
     updatedAt: '2026-08-05T10:00:00.000Z',
@@ -19,6 +40,21 @@ export const PRODUCTOS_MOCK = [
     precio: 285000,
     stock: 5,
     categoriaId: 1,
+    socket: 'LGA1700',
+    tipoMemoria: 'DDR4',
+    graficosIntegrados: false,
+    incluyeCooler: true,
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Núcleos', valor: '10 (6P + 4E)' },
+          { clave: 'Hilos', valor: '16' },
+          { clave: 'Frecuencia turbo', valor: '4.6 GHz' },
+          { clave: 'Caché L3', valor: '20 MB' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-08-05T10:05:00.000Z',
     updatedAt: '2026-08-05T10:05:00.000Z',
@@ -31,6 +67,24 @@ export const PRODUCTOS_MOCK = [
     precio: 210000,
     stock: 6,
     categoriaId: 2,
+    socket: 'AM4',
+    tipoMemoria: 'DDR4',
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Formato', valor: 'ATX' },
+          { clave: 'Chipset', valor: 'B550' },
+        ],
+      },
+      {
+        grupo: 'CONECTIVIDAD',
+        items: [
+          { clave: 'M.2', valor: '2 slots' },
+          { clave: 'USB', valor: '8 puertos' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-08-05T10:10:00.000Z',
     updatedAt: '2026-08-05T10:10:00.000Z',
@@ -43,6 +97,17 @@ export const PRODUCTOS_MOCK = [
     precio: 185000,
     stock: 4,
     categoriaId: 2,
+    socket: 'LGA1700',
+    tipoMemoria: 'DDR4',
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Formato', valor: 'mATX' },
+          { clave: 'Chipset', valor: 'B760' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-08-05T10:15:00.000Z',
     updatedAt: '2026-08-05T10:15:00.000Z',
@@ -55,6 +120,17 @@ export const PRODUCTOS_MOCK = [
     precio: 68000,
     stock: 15,
     categoriaId: 3,
+    tipoMemoria: 'DDR4',
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Capacidad', valor: '16GB (2x8GB)' },
+          { clave: 'Velocidad', valor: '3200 MHz' },
+          { clave: 'Latencia', valor: 'CL16' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-08-05T10:20:00.000Z',
     updatedAt: '2026-08-05T10:20:00.000Z',
@@ -67,6 +143,17 @@ export const PRODUCTOS_MOCK = [
     precio: 145000,
     stock: 7,
     categoriaId: 3,
+    tipoMemoria: 'DDR5',
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Capacidad', valor: '32GB (2x16GB)' },
+          { clave: 'Velocidad', valor: '5600 MHz' },
+          { clave: 'Latencia', valor: 'CL36' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-08-05T10:25:00.000Z',
     updatedAt: '2026-08-05T10:25:00.000Z',
@@ -79,6 +166,22 @@ export const PRODUCTOS_MOCK = [
     precio: 620000,
     stock: 3,
     categoriaId: 4,
+    imagenUrl: '/uploads/productos/demo-rtx-4060.png',
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Memoria', valor: '8GB GDDR6' },
+          { clave: 'Núcleos CUDA', valor: '3072' },
+        ],
+      },
+      {
+        grupo: 'CONECTIVIDAD',
+        items: [
+          { clave: 'Salidas de video', valor: '2x HDMI 2.1, 2x DisplayPort 1.4' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-08-05T10:30:00.000Z',
     updatedAt: '2026-08-05T10:30:00.000Z',
@@ -235,6 +338,25 @@ export const PRODUCTOS_MOCK = [
     precio: 675000,
     stock: 5,
     categoriaId: 11,
+    imagenUrl: '/uploads/productos/demo-ideapad-3.png',
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Procesador', valor: 'Intel Core i3-1115G4' },
+          { clave: 'Memoria', valor: '8GB DDR4' },
+          { clave: 'Almacenamiento', valor: '256GB SSD NVMe' },
+          { clave: 'Pantalla', valor: '15.6" HD' },
+        ],
+      },
+      {
+        grupo: 'CONECTIVIDAD',
+        items: [
+          { clave: 'WiFi', valor: '802.11ac' },
+          { clave: 'Puertos', valor: '1x USB-C, 2x USB-A, HDMI' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-09-10T11:00:00.000Z',
     updatedAt: '2026-09-10T11:00:00.000Z',
@@ -271,6 +393,17 @@ export const PRODUCTOS_MOCK = [
     precio: 480000,
     stock: 4,
     categoriaId: 12,
+    especificaciones: [
+      {
+        grupo: 'CARACTERÍSTICAS GENERALES',
+        items: [
+          { clave: 'Pulgadas', valor: '27"' },
+          { clave: 'Resolución', valor: '1920x1080' },
+          { clave: 'Tasa de refresco', valor: '165 Hz' },
+          { clave: 'Panel', valor: 'IPS' },
+        ],
+      },
+    ],
     activo: true,
     createdAt: '2026-09-10T11:15:00.000Z',
     updatedAt: '2026-09-10T11:15:00.000Z',
