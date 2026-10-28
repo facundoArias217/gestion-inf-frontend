@@ -23,6 +23,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import AlertaBorrador from '@/components/alerta-borrador'
+import { revivirNumeros, useFormDraft } from '@/hooks/use-form-draft'
 import {
   Select,
   SelectContent,
@@ -80,6 +82,17 @@ function fechaMasDias(fecha, dias) {
     .slice(0, 10)
 }
 
+function estaVacioPresupuesto(borrador) {
+  return (
+    !borrador ||
+    (!Number.isFinite(borrador.valores?.clienteId) &&
+      !(borrador.valores?.detalles ?? []).some((detalle) =>
+        Number.isFinite(detalle?.productoId),
+      ) &&
+      borrador.armadoElegidoId == null)
+  )
+}
+
 function CampoNumero({ field, ...props }) {
   return (
     <Input
@@ -119,8 +132,39 @@ function PresupuestoRegistroPage() {
     name: 'detalles',
   })
 
+  const { hayBorrador, guardar: guardarBorrador, recuperar: recuperarBorrador, limpiar: limpiarBorrador } =
+    useFormDraft('presupuesto', { estaVacio: estaVacioPresupuesto })
+
   const detalles = useWatch({ control: form.control, name: 'detalles' })
+  const valores = useWatch({ control: form.control })
+  const valoresJson = JSON.stringify(valores)
   const fechaForm = useWatch({ control: form.control, name: 'fecha' })
+
+  useEffect(() => {
+    guardarBorrador({
+      valores: JSON.parse(valoresJson),
+      vigencia,
+      vencePersonalizado,
+      armadoElegidoId,
+    })
+  }, [
+    valoresJson,
+    vigencia,
+    vencePersonalizado,
+    armadoElegidoId,
+    guardarBorrador,
+  ])
+
+  const recuperarDraft = () => {
+    const borrador = recuperarBorrador()
+    if (!borrador) {
+      return
+    }
+    form.reset(revivirNumeros(borrador.valores ?? {}))
+    setVigencia(borrador.vigencia ?? VIGENCIA_DEFAULT)
+    setVencePersonalizado(borrador.vencePersonalizado ?? hoy())
+    setArmadoElegidoId(borrador.armadoElegidoId ?? null)
+  }
 
   useEffect(() => {
     let cancelado = false
@@ -241,6 +285,7 @@ function PresupuestoRegistroPage() {
     try {
       await crearPresupuesto(datos)
       toast.success('Presupuesto creado en estado PENDIENTE')
+      limpiarBorrador()
       navigate('/presupuestos')
     } catch (error) {
       toast.error(error.message)
@@ -262,6 +307,10 @@ function PresupuestoRegistroPage() {
           Nuevo presupuesto
         </h1>
       </div>
+
+      {hayBorrador && (
+        <AlertaBorrador onRecuperar={recuperarDraft} onDescartar={limpiarBorrador} />
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
@@ -538,7 +587,10 @@ function PresupuestoRegistroPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate('/presupuestos')}
+                    onClick={() => {
+                      limpiarBorrador()
+                      navigate('/presupuestos')
+                    }}
                   >
                     Cancelar
                   </Button>

@@ -18,6 +18,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import AlertaBorrador from '@/components/alerta-borrador'
+import { useFormDraft } from '@/hooks/use-form-draft'
 import ArmadoStepper from '../components/armado-stepper'
 import PasoCategoria from '../components/paso-categoria'
 import PasoOtros from '../components/paso-otros'
@@ -124,6 +126,10 @@ function itemResumen(seleccion, productosPorId) {
   }
 }
 
+function estaVacioArmado(borrador) {
+  return !borrador?.nombre?.trim() && (borrador?.selecciones ?? []).length === 0
+}
+
 function ArmadoFormPage() {
   const { id } = useParams()
   const esEdicion = id != null
@@ -142,6 +148,46 @@ function ArmadoFormPage() {
   const [categoriaOtrosId, setCategoriaOtrosId] = useState(null)
   const [detalle, setDetalle] = useState(null)
   const [enviando, setEnviando] = useState(false)
+
+  const { hayBorrador, guardar: guardarBorrador, recuperar: recuperarBorrador, limpiar: limpiarBorrador } =
+    useFormDraft('armado', { estaVacio: estaVacioArmado })
+
+  useEffect(() => {
+    if (cargando || esEdicion) {
+      return
+    }
+    guardarBorrador({
+      nombre,
+      descripcion,
+      clienteId,
+      selecciones,
+      pasoActual,
+      categoriaOtrosId,
+    })
+  }, [
+    cargando,
+    esEdicion,
+    nombre,
+    descripcion,
+    clienteId,
+    selecciones,
+    pasoActual,
+    categoriaOtrosId,
+    guardarBorrador,
+  ])
+
+  const recuperarDraft = () => {
+    const borrador = recuperarBorrador()
+    if (!borrador) {
+      return
+    }
+    setNombre(borrador.nombre ?? '')
+    setDescripcion(borrador.descripcion ?? '')
+    setClienteId(borrador.clienteId ?? null)
+    setSelecciones(borrador.selecciones ?? [])
+    setPasoActual(borrador.pasoActual ?? 0)
+    setCategoriaOtrosId(borrador.categoriaOtrosId ?? null)
+  }
 
   useEffect(() => {
     let cancelado = false
@@ -527,6 +573,7 @@ function ArmadoFormPage() {
       } else {
         await crearArmado(datosArmado())
         toast.success('Armado guardado en estado BORRADOR')
+        limpiarBorrador()
       }
       navigate('/armados')
     } catch (error) {
@@ -551,6 +598,7 @@ function ArmadoFormPage() {
       } else {
         const nuevo = await crearArmado(datosArmado())
         armadoId = nuevo.id
+        limpiarBorrador()
       }
 
       try {
@@ -589,6 +637,13 @@ function ArmadoFormPage() {
         </h1>
       </div>
 
+      {!esEdicion && hayBorrador && (
+        <AlertaBorrador
+          onRecuperar={recuperarDraft}
+          onDescartar={limpiarBorrador}
+        />
+      )}
+
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="grid content-start gap-6">
           <ArmadoStepper
@@ -616,7 +671,12 @@ function ArmadoFormPage() {
               enviando={enviando}
               onGuardar={guardar}
               onGuardarYFinalizar={guardarYFinalizar}
-              onCancelar={() => navigate('/armados')}
+              onCancelar={() => {
+                if (!esEdicion) {
+                  limpiarBorrador()
+                }
+                navigate('/armados')
+              }}
             />
           ) : paso.otro ? (
             <PasoOtros

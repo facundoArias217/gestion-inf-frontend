@@ -25,6 +25,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import AlertaBorrador from '@/components/alerta-borrador'
+import { revivirNumeros, useFormDraft } from '@/hooks/use-form-draft'
 import { listarCategorias } from '@/features/categorias/services'
 import { listarClientes } from '@/features/clientes/services'
 import { listarProductos } from '@/features/productos/services'
@@ -53,6 +55,15 @@ const ventaSchema = z.object({
 
 function hoy() {
   return new Date().toISOString().slice(0, 10)
+}
+
+function estaVacioVenta(valores) {
+  return (
+    !Number.isFinite(valores?.clienteId) &&
+    !(valores?.detalles ?? []).some((detalle) =>
+      Number.isFinite(detalle?.productoId),
+    )
+  )
 }
 
 function CampoNumero({ field, ...props }) {
@@ -90,7 +101,23 @@ function VentaRegistroPage() {
     name: 'detalles',
   })
 
+  const { hayBorrador, guardar: guardarBorrador, recuperar: recuperarBorrador, limpiar: limpiarBorrador } =
+    useFormDraft('venta', { estaVacio: estaVacioVenta })
+
   const detalles = useWatch({ control: form.control, name: 'detalles' })
+  const valores = useWatch({ control: form.control })
+  const valoresJson = JSON.stringify(valores)
+
+  useEffect(() => {
+    guardarBorrador(JSON.parse(valoresJson))
+  }, [valoresJson, guardarBorrador])
+
+  const recuperarDraft = () => {
+    const borrador = recuperarBorrador()
+    if (borrador) {
+      form.reset(revivirNumeros(borrador))
+    }
+  }
 
   useEffect(() => {
     let cancelado = false
@@ -202,6 +229,7 @@ function VentaRegistroPage() {
     try {
       await crearVenta(datos)
       toast.success('Venta registrada en estado COMPLETADA')
+      limpiarBorrador()
       navigate('/ventas')
     } catch (error) {
       toast.error(error.message)
@@ -221,6 +249,10 @@ function VentaRegistroPage() {
         </Button>
         <h1 className="text-xl font-semibold tracking-tight">Nueva venta</h1>
       </div>
+
+      {hayBorrador && (
+        <AlertaBorrador onRecuperar={recuperarDraft} onDescartar={limpiarBorrador} />
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
@@ -399,7 +431,10 @@ function VentaRegistroPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate('/ventas')}
+                    onClick={() => {
+                      limpiarBorrador()
+                      navigate('/ventas')
+                    }}
                   >
                     Cancelar
                   </Button>

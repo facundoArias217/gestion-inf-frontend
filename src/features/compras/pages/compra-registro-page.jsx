@@ -23,6 +23,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import AlertaBorrador from '@/components/alerta-borrador'
+import { revivirNumeros, useFormDraft } from '@/hooks/use-form-draft'
 import {
   Select,
   SelectContent,
@@ -62,6 +64,15 @@ function hoy() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function estaVacioCompra(valores) {
+  return (
+    !Number.isFinite(valores?.proveedorId) &&
+    !(valores?.detalles ?? []).some((detalle) =>
+      Number.isFinite(detalle?.productoId),
+    )
+  )
+}
+
 function CampoNumero({ field, ...props }) {
   return (
     <Input
@@ -96,7 +107,23 @@ function CompraRegistroPage() {
     name: 'detalles',
   })
 
+  const { hayBorrador, guardar: guardarBorrador, recuperar: recuperarBorrador, limpiar: limpiarBorrador } =
+    useFormDraft('compra', { estaVacio: estaVacioCompra })
+
   const detalles = useWatch({ control: form.control, name: 'detalles' })
+  const valores = useWatch({ control: form.control })
+  const valoresJson = JSON.stringify(valores)
+
+  useEffect(() => {
+    guardarBorrador(JSON.parse(valoresJson))
+  }, [valoresJson, guardarBorrador])
+
+  const recuperarDraft = () => {
+    const borrador = recuperarBorrador()
+    if (borrador) {
+      form.reset(revivirNumeros(borrador))
+    }
+  }
 
   useEffect(() => {
     let cancelado = false
@@ -160,6 +187,7 @@ function CompraRegistroPage() {
     try {
       await crearCompra(datos)
       toast.success('Compra registrada en estado PENDIENTE')
+      limpiarBorrador()
       navigate('/compras')
     } catch (error) {
       toast.error(error.message)
@@ -179,6 +207,10 @@ function CompraRegistroPage() {
         </Button>
         <h1 className="text-xl font-semibold tracking-tight">Nueva compra</h1>
       </div>
+
+      {hayBorrador && (
+        <AlertaBorrador onRecuperar={recuperarDraft} onDescartar={limpiarBorrador} />
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
@@ -393,7 +425,10 @@ function CompraRegistroPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => navigate('/compras')}
+                    onClick={() => {
+                      limpiarBorrador()
+                      navigate('/compras')
+                    }}
                   >
                     Cancelar
                   </Button>
