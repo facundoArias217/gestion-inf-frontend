@@ -35,7 +35,7 @@ import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCuit } from '@/lib/format'
 import BajaProveedorDialog from '../components/baja-proveedor-dialog'
-import ProveedorFormDialog from '../components/proveedor-form-dialog'
+import ProveedorFormSheet from '../components/proveedor-form-sheet'
 import { listarProveedores, reactivarProveedor } from '../services'
 
 const FILTROS = [
@@ -286,7 +286,7 @@ function ProveedoresPage() {
         </CardContent>
       </Card>
 
-      <ProveedorFormDialog
+      <ProveedorFormSheet
         open={formAbierto}
         onOpenChange={setFormAbierto}
         proveedor={proveedorEditando}

@@ -8,13 +8,12 @@ import CuitInput from '@/components/cuit-input'
 import TelefonoInput from '@/components/telefono-input'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import {
   Form,
   FormControl,
@@ -53,7 +52,7 @@ const proveedorSchema = z.object({
     .max(100, 'Máximo 100 caracteres'),
 })
 
-function ProveedorFormDialog({ open, onOpenChange, proveedor, onGuardado }) {
+function ProveedorFormSheet({ open, onOpenChange, proveedor, onGuardado }) {
   const esEdicion = proveedor != null
 
   const form = useForm({
@@ -102,22 +101,22 @@ function ProveedorFormDialog({ open, onOpenChange, proveedor, onGuardado }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent ancho="lg" className="gap-0 overflow-y-auto">
+        <SheetHeader className="border-b">
+          <SheetTitle>
             {esEdicion ? 'Editar proveedor' : 'Nuevo proveedor'}
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             {esEdicion
               ? 'Modificá los datos del proveedor.'
               : 'Los proveedores son el origen de las compras de la tienda.'}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="grid gap-4"
+            className="grid gap-4 px-4 py-6"
             noValidate
           >
             <FormField
@@ -197,7 +196,7 @@ function ProveedorFormDialog({ open, onOpenChange, proveedor, onGuardado }) {
                 )}
               />
             </div>
-            <DialogFooter>
+            <div className="flex justify-end gap-2 border-t pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -208,12 +207,12 @@ function ProveedorFormDialog({ open, onOpenChange, proveedor, onGuardado }) {
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Guardando…' : 'Guardar'}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
 
-export default ProveedorFormDialog
+export default ProveedorFormSheet

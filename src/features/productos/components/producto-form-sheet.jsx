@@ -6,13 +6,12 @@ import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import {
   Form,
   FormControl,
@@ -103,7 +102,7 @@ function CampoNumero({ field, ...props }) {
   )
 }
 
-function ProductoFormDialog({
+function ProductoFormSheet({
   open,
   onOpenChange,
   producto,
@@ -176,22 +175,22 @@ function ProductoFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent ancho="xl" className="gap-0 overflow-y-auto">
+        <SheetHeader className="border-b">
+          <SheetTitle>
             {esEdicion ? 'Editar producto' : 'Nuevo producto'}
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             {esEdicion
               ? 'Modificá los datos del producto.'
               : 'Los productos sueltos y los componentes de armados viven en el mismo catálogo.'}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="grid gap-4"
+            className="grid gap-4 px-4 py-6"
             noValidate
           >
             <FormField
@@ -323,7 +322,7 @@ function ProductoFormDialog({
               )}
             />
             <EditorEspecificaciones control={form.control} />
-            <DialogFooter>
+            <div className="flex justify-end gap-2 border-t pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -334,12 +333,12 @@ function ProductoFormDialog({
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Guardando…' : 'Guardar'}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
 
-export default ProductoFormDialog
+export default ProductoFormSheet

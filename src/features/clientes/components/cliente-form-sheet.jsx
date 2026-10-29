@@ -6,13 +6,12 @@ import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import {
   Form,
   FormControl,
@@ -55,7 +54,7 @@ const clienteSchema = z.object({
     .max(100, 'Máximo 100 caracteres'),
 })
 
-function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
+function ClienteFormSheet({ open, onOpenChange, cliente, onGuardado }) {
   const esEdicion = cliente != null
 
   const form = useForm({
@@ -107,22 +106,22 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent ancho="lg" className="gap-0 overflow-y-auto">
+        <SheetHeader className="border-b">
+          <SheetTitle>
             {esEdicion ? 'Editar cliente' : 'Nuevo cliente'}
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             {esEdicion
               ? 'Modificá los datos del cliente.'
               : 'Los clientes se asocian a presupuestos y ventas.'}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="grid gap-4"
+            className="grid gap-4 px-4 py-6"
             noValidate
           >
             <div className="grid gap-4 sm:grid-cols-2">
@@ -217,7 +216,7 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
                 )}
               />
             </div>
-            <DialogFooter>
+            <div className="flex justify-end gap-2 border-t pt-4">
               <Button
                 type="button"
                 variant="outline"
@@ -228,12 +227,12 @@ function ClienteFormDialog({ open, onOpenChange, cliente, onGuardado }) {
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Guardando…' : 'Guardar'}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
 
-export default ClienteFormDialog
+export default ClienteFormSheet

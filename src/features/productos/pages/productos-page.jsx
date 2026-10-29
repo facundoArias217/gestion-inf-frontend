@@ -38,7 +38,7 @@ import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency } from '@/lib/format'
 import BajaProductoDialog from '../components/baja-producto-dialog'
-import ProductoFormDialog from '../components/producto-form-dialog'
+import ProductoFormSheet from '../components/producto-form-sheet'
 import { listarProductos, reactivarProducto } from '../services'
 
 const FILTROS = [
@@ -360,7 +360,7 @@ function ProductosPage() {
         </CardContent>
       </Card>
 
-      <ProductoFormDialog
+      <ProductoFormSheet
         open={formAbierto}
         onOpenChange={setFormAbierto}
         producto={productoEditando}

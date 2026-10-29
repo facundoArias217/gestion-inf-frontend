@@ -35,7 +35,7 @@ import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCuit } from '@/lib/format'
 import BajaClienteDialog from '../components/baja-cliente-dialog'
-import ClienteFormDialog from '../components/cliente-form-dialog'
+import ClienteFormSheet from '../components/cliente-form-sheet'
 import { listarClientes, reactivarCliente } from '../services'
 
 const FILTROS = [
@@ -289,7 +289,7 @@ function ClientesPage() {
         </CardContent>
       </Card>
 
-      <ClienteFormDialog
+      <ClienteFormSheet
         open={formAbierto}
         onOpenChange={setFormAbierto}
         cliente={clienteEditando}
