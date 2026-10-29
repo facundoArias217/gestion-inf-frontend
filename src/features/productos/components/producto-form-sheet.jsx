@@ -46,6 +46,10 @@ const productoSchema = z.object({
     .int()
     .positive(),
   descripcion: z.string().max(200, 'Máximo 200 caracteres'),
+  socket: z.string().max(50, 'Máximo 50 caracteres'),
+  tipoMemoria: z.string().max(20, 'Máximo 20 caracteres'),
+  graficosIntegrados: z.boolean().nullable(),
+  incluyeCooler: z.boolean().nullable(),
   precio: z
     .number({ invalid_type_error: 'Ingresá el precio' })
     .positive('El precio debe ser mayor a cero'),
@@ -102,6 +106,38 @@ function CampoNumero({ field, ...props }) {
   )
 }
 
+function CampoTriEstado({ control, name, etiqueta }) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{etiqueta}</FormLabel>
+          <Select
+            value={field.value == null ? 'sin-dato' : String(field.value)}
+            onValueChange={(valor) =>
+              field.onChange(valor === 'sin-dato' ? null : valor === 'true')
+            }
+          >
+            <FormControl>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              <SelectItem value="sin-dato">Sin dato</SelectItem>
+              <SelectItem value="true">Sí</SelectItem>
+              <SelectItem value="false">No</SelectItem>
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
 function ProductoFormSheet({
   open,
   onOpenChange,
@@ -118,6 +154,10 @@ function ProductoFormSheet({
       marca: '',
       categoriaId: NaN,
       descripcion: '',
+      socket: '',
+      tipoMemoria: '',
+      graficosIntegrados: null,
+      incluyeCooler: null,
       precio: NaN,
       stock: NaN,
       imagenUrl: '',
@@ -132,6 +172,10 @@ function ProductoFormSheet({
         marca: producto?.marca ?? '',
         categoriaId: producto?.categoriaId ?? NaN,
         descripcion: producto?.descripcion ?? '',
+        socket: producto?.socket ?? '',
+        tipoMemoria: producto?.tipoMemoria ?? '',
+        graficosIntegrados: producto?.graficosIntegrados ?? null,
+        incluyeCooler: producto?.incluyeCooler ?? null,
         precio: producto?.precio ?? NaN,
         stock: producto?.stock ?? NaN,
         imagenUrl: producto?.imagenUrl ?? '',
@@ -148,6 +192,10 @@ function ProductoFormSheet({
       precio: values.precio,
       stock: values.stock,
       categoriaId: values.categoriaId,
+      socket: values.socket.trim() || null,
+      tipoMemoria: values.tipoMemoria.trim() || null,
+      graficosIntegrados: values.graficosIntegrados,
+      incluyeCooler: values.incluyeCooler,
       imagenUrl: values.imagenUrl.trim() || null,
       especificaciones:
         values.especificaciones.length > 0
@@ -272,6 +320,54 @@ function ProductoFormSheet({
                 </FormItem>
               )}
             />
+            <div className="grid gap-3 rounded-lg border p-4">
+              <div>
+                <p className="text-sm font-medium">Compatibilidad</p>
+                <p className="text-xs text-muted-foreground">
+                  Datos que usa el armado para advertir incompatibilidades.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="socket"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Socket</FormLabel>
+                      <FormControl>
+                        <Input placeholder="AM5, LGA1700…" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tipoMemoria"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de memoria</FormLabel>
+                      <FormControl>
+                        <Input placeholder="DDR5, DDR4…" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <CampoTriEstado
+                  control={form.control}
+                  name="graficosIntegrados"
+                  etiqueta="Gráficos integrados"
+                />
+                <CampoTriEstado
+                  control={form.control}
+                  name="incluyeCooler"
+                  etiqueta="Incluye cooler"
+                />
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}

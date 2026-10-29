@@ -34,6 +34,13 @@ function yaExisteNombre(nombre, idExcluir = null) {
   )
 }
 
+function yaExisteClave(clave, idExcluir = null) {
+  if (!clave) return false
+  return categorias.some(
+    (categoria) => categoria.id !== idExcluir && categoria.clave === clave,
+  )
+}
+
 function listarMock() {
   return conLatencia(categorias)
 }
@@ -42,11 +49,16 @@ function crearMock(datos) {
   if (yaExisteNombre(datos.nombre)) {
     return errorConLatencia('Ya existe una categoría con ese nombre')
   }
+  if (yaExisteClave(datos.clave)) {
+    return errorConLatencia('Ya existe una categoría con esa clave')
+  }
 
   const ahora = new Date().toISOString()
   const nueva = {
     id: categorias.length ? Math.max(...categorias.map((c) => c.id)) + 1 : 1,
     nombre: datos.nombre.trim(),
+    clave: datos.clave ?? null,
+    obligatoria: datos.obligatoria ?? false,
     descripcion: datos.descripcion?.trim() ?? '',
     activo: true,
     createdAt: ahora,
@@ -64,8 +76,13 @@ function actualizarMock(id, datos) {
   if (yaExisteNombre(datos.nombre, id)) {
     return errorConLatencia('Ya existe una categoría con ese nombre')
   }
+  if (yaExisteClave(datos.clave, id)) {
+    return errorConLatencia('Ya existe una categoría con esa clave')
+  }
 
   categoria.nombre = datos.nombre.trim()
+  categoria.clave = datos.clave ?? null
+  categoria.obligatoria = datos.obligatoria ?? false
   categoria.descripcion = datos.descripcion?.trim() ?? ''
   categoria.updatedAt = new Date().toISOString()
   return conLatencia(categoria)

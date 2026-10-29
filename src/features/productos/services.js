@@ -39,6 +39,10 @@ function crearMock(datos) {
     precio: datos.precio,
     stock: datos.stock,
     categoriaId: datos.categoriaId,
+    socket: datos.socket ?? null,
+    tipoMemoria: datos.tipoMemoria ?? null,
+    graficosIntegrados: datos.graficosIntegrados ?? null,
+    incluyeCooler: datos.incluyeCooler ?? null,
     imagenUrl: datos.imagenUrl ?? null,
     especificaciones: datos.especificaciones
       ? JSON.parse(JSON.stringify(datos.especificaciones))
@@ -63,6 +67,10 @@ function actualizarMock(id, datos) {
   producto.precio = datos.precio
   producto.stock = datos.stock
   producto.categoriaId = datos.categoriaId
+  producto.socket = datos.socket ?? null
+  producto.tipoMemoria = datos.tipoMemoria ?? null
+  producto.graficosIntegrados = datos.graficosIntegrados ?? null
+  producto.incluyeCooler = datos.incluyeCooler ?? null
   producto.imagenUrl = datos.imagenUrl ?? null
   producto.especificaciones = datos.especificaciones
     ? JSON.parse(JSON.stringify(datos.especificaciones))

@@ -8,6 +8,7 @@ import TableHeadOrdenable from '@/components/table-head-ordenable'
 import PageHeader from '@/components/page-header'
 import Paginacion from '@/components/paginacion'
 import StatusBadge from '@/components/status-badge'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -227,7 +228,19 @@ function CategoriasPage() {
                 visibles.map((categoria) => (
                   <TableRow key={categoria.id}>
                     <TableCell className="font-medium">
-                      {categoria.nombre}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span>{categoria.nombre}</span>
+                          {categoria.obligatoria && (
+                            <Badge variant="outline">Obligatoria</Badge>
+                          )}
+                        </div>
+                        {categoria.clave && (
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {categoria.clave}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="hidden max-w-sm text-muted-foreground lg:table-cell">
                       {categoria.descripcion || '—'}
