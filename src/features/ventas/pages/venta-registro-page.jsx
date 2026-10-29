@@ -29,6 +29,7 @@ import AlertaBorrador from '@/components/alerta-borrador'
 import { revivirNumeros, useFormDraft } from '@/hooks/use-form-draft'
 import { listarCategorias } from '@/features/categorias/services'
 import { listarClientes } from '@/features/clientes/services'
+import PagoFormDialog from '@/features/pagos/components/pago-form-dialog'
 import { listarProductos } from '@/features/productos/services'
 import { formatCurrency } from '@/lib/format'
 import { crearVenta } from '../services'
@@ -86,6 +87,7 @@ function VentaRegistroPage() {
   const [clientes, setClientes] = useState([])
   const [productos, setProductos] = useState([])
   const [categorias, setCategorias] = useState([])
+  const [ventaCreada, setVentaCreada] = useState(null)
 
   const form = useForm({
     resolver: zodResolver(ventaSchema),
@@ -227,10 +229,10 @@ function VentaRegistroPage() {
     }
 
     try {
-      await crearVenta(datos)
+      const venta = await crearVenta(datos)
       toast.success('Venta registrada en estado COMPLETADA')
       limpiarBorrador()
-      navigate('/ventas')
+      setVentaCreada(venta)
     } catch (error) {
       toast.error(error.message)
     }
@@ -449,6 +451,19 @@ function VentaRegistroPage() {
           </Card>
         </form>
       </Form>
+
+      <PagoFormDialog
+        open={ventaCreada != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setVentaCreada(null)
+            navigate('/ventas')
+          }
+        }}
+        venta={ventaCreada}
+        clientes={clientes}
+        textoCancelar="Cobrar después"
+      />
     </div>
   )
 }

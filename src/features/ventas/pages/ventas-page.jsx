@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Ban, Eye, MoreHorizontal, Plus, ShoppingCart } from 'lucide-react'
+import {
+  Ban,
+  CreditCard,
+  Eye,
+  MoreHorizontal,
+  Plus,
+  ShoppingCart,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -37,6 +44,7 @@ import { usePaginacion } from '@/hooks/use-paginacion'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { filtrarPorBusqueda } from '@/lib/busqueda'
 import { formatCurrency, formatFecha } from '@/lib/format'
+import PagoFormDialog from '@/features/pagos/components/pago-form-dialog'
 import CancelarVentaDialog from '../components/cancelar-venta-dialog'
 import VentaDetalleDialog from '../components/venta-detalle-dialog'
 import { listarVentas } from '../services'
@@ -48,10 +56,27 @@ const FILTROS = [
 ]
 
 const totalDe = (venta) =>
-  venta.detalles.reduce(
-    (acum, detalle) => acum + detalle.cantidad * detalle.precioUnitario,
-    0,
-  )
+  typeof venta.total === 'number'
+    ? venta.total
+    : venta.detalles.reduce(
+        (acum, detalle) => acum + detalle.cantidad * detalle.precioUnitario,
+        0,
+      )
+
+const saldoDe = (venta) =>
+  typeof venta.saldo === 'number' ? venta.saldo : totalDe(venta)
+
+const estadoCobroDe = (venta) => {
+  if (venta.estadoCobro) {
+    return venta.estadoCobro
+  }
+  const total = totalDe(venta)
+  const saldo = saldoDe(venta)
+  if (saldo <= 0) {
+    return 'COBRADA'
+  }
+  return saldo < total ? 'PARCIAL' : 'SIN_COBRAR'
+}
 
 function VentasPage() {
   const navigate = useNavigate()
@@ -64,6 +89,7 @@ function VentasPage() {
   const [orden, setOrden] = useOrden('ventas', 'fecha-desc')
   const [ventaDetalle, setVentaDetalle] = useState(null)
   const [ventaCancelar, setVentaCancelar] = useState(null)
+  const [ventaCobrar, setVentaCobrar] = useState(null)
 
   useDocumentTitle('Ventas')
 
@@ -136,6 +162,7 @@ function VentasPage() {
         return cliente ? `${cliente.apellido} ${cliente.nombre}` : ''
       },
       'estado',
+      (venta) => estadoCobroDe(venta),
       (venta) => `#${venta.id}`,
     ])
 
@@ -149,7 +176,7 @@ function VentasPage() {
     <div className="grid gap-4">
       <PageHeader
         titulo="Ventas"
-        descripcion="Ventas directas de productos. La venta nace COMPLETADA y descuenta stock; cancelarla lo reintegra."
+        descripcion="Ventas directas de productos. La venta nace COMPLETADA, descuenta stock y se cobra total o parcialmente hasta cubrir el saldo."
         acciones={
           <Button onClick={() => navigate('/ventas/nueva')}>
             <Plus className="size-4" />
@@ -186,18 +213,19 @@ function VentasPage() {
               <TableRow>
                 <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="fecha">Fecha</TableHeadOrdenable>
                 <TableHead>Cliente</TableHead>
-                <TableHead className="text-right">Ítems</TableHead>
+                <TableHead className="hidden text-right lg:table-cell">Ítems</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead>Cobro</TableHead>
                 <TableHead className="w-24 text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {cargando ? (
-                <SkeletonTabla columnas={6} />
+                <SkeletonTabla columnas={7} ocultas={[2]} />
               ) : ordenadas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="p-0">
+                  <TableCell colSpan={7} className="p-0">
                     {busqueda ? (
                       <EmptyState
                         icono={ShoppingCart}
@@ -236,14 +264,22 @@ function VentasPage() {
                           }`
                         : '—'}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="hidden text-right lg:table-cell">
                       {venta.detalles.length}
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatCurrency(totalDe(venta))}
+                      <p>{formatCurrency(totalDe(venta))}</p>
+                      {saldoDe(venta) > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Saldo {formatCurrency(saldoDe(venta))}
+                        </p>
+                      )}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={venta.estado} />
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={estadoCobroDe(venta)} />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
@@ -267,6 +303,14 @@ function VentasPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              {estadoCobroDe(venta) !== 'COBRADA' && (
+                                <DropdownMenuItem
+                                  onClick={() => setVentaCobrar(venta)}
+                                >
+                                  <CreditCard className="size-4" />
+                                  Cobrar saldo
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
                                 onClick={() => setVentaCancelar(venta)}
@@ -297,6 +341,17 @@ function VentasPage() {
         }}
         venta={ventaDetalle}
         productos={productos}
+      />
+      <PagoFormDialog
+        open={ventaCobrar != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setVentaCobrar(null)
+          }
+        }}
+        venta={ventaCobrar}
+        clientes={clientes}
+        onRegistrado={recargarVentas}
       />
       <CancelarVentaDialog
         open={ventaCancelar != null}

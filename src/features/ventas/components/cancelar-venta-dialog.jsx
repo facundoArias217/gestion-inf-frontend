@@ -41,8 +41,9 @@ function CancelarVentaDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>¿Cancelar la venta #{venta?.id}?</AlertDialogTitle>
           <AlertDialogDescription>
-            La venta pasa a CANCELADA y el stock vendido se reintegra
-            transaccionalmente. Esta acción no se puede revertir.
+            La venta pasa a CANCELADA, el stock vendido se reintegra
+            transaccionalmente y sus cobros APROBADOS pasan a ANULADO. Esta
+            acción no se puede revertir.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

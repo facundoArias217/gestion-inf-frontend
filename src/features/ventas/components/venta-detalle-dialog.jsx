@@ -1,3 +1,4 @@
+import StatusBadge from '@/components/status-badge'
 import {
   Dialog,
   DialogContent,
@@ -16,10 +17,29 @@ import {
 import { formatCurrency } from '@/lib/format'
 
 function totalDe(venta) {
-  return venta.detalles.reduce(
+  if (typeof venta?.total === 'number') {
+    return venta.total
+  }
+  return (venta?.detalles ?? []).reduce(
     (acum, detalle) => acum + detalle.cantidad * detalle.precioUnitario,
     0,
   )
+}
+
+function saldoDe(venta) {
+  return typeof venta?.saldo === 'number' ? venta.saldo : totalDe(venta)
+}
+
+function estadoCobroDe(venta) {
+  if (venta?.estadoCobro) {
+    return venta.estadoCobro
+  }
+  const total = totalDe(venta)
+  const saldo = saldoDe(venta)
+  if (saldo <= 0) {
+    return 'COBRADA'
+  }
+  return saldo < total ? 'PARCIAL' : 'SIN_COBRAR'
 }
 
 function VentaDetalleDialog({ open, onOpenChange, venta, productos }) {
@@ -30,11 +50,15 @@ function VentaDetalleDialog({ open, onOpenChange, venta, productos }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Detalle de la venta #{venta?.id}</DialogTitle>
+          <DialogTitle className="flex flex-wrap items-center gap-2">
+            Detalle de la venta #{venta?.id}
+            {venta && <StatusBadge status={estadoCobroDe(venta)} />}
+          </DialogTitle>
           <DialogDescription>
             {venta?.detalles?.length ?? 0} producto
             {venta?.detalles?.length === 1 ? '' : 's'} — total{' '}
-            {formatCurrency(venta ? totalDe(venta) : 0)}
+            {formatCurrency(totalDe(venta))}
+            {venta?.estado ? ` · venta ${venta.estado}` : ''}
           </DialogDescription>
         </DialogHeader>
         <Table>
@@ -66,11 +90,23 @@ function VentaDetalleDialog({ open, onOpenChange, venta, productos }) {
                 Total
               </TableCell>
               <TableCell className="text-right font-semibold">
-                {formatCurrency(venta ? totalDe(venta) : 0)}
+                {formatCurrency(totalDe(venta))}
               </TableCell>
             </TableRow>
           </TableBody>
         </Table>
+        <div className="grid gap-1 rounded-lg border bg-muted/40 p-3 text-sm">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">Saldo pendiente</span>
+            <span
+              className={
+                saldoDe(venta) > 0 ? 'font-medium' : 'text-muted-foreground'
+              }
+            >
+              {formatCurrency(saldoDe(venta))}
+            </span>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -39,10 +39,10 @@ import { formatCurrency, formatFecha } from '@/lib/format'
 import PagoFormDialog from '../components/pago-form-dialog'
 import { listarPagos } from '../services'
 
-const RESULTADOS_FILTRO = [
-  { valor: 'todas', label: 'Todos los resultados' },
+const ESTADOS_FILTRO = [
+  { valor: 'todas', label: 'Todos los estados' },
   { valor: 'APROBADO', label: 'Aprobados' },
-  { valor: 'RECHAZADO', label: 'Rechazados' },
+  { valor: 'ANULADO', label: 'Anulados' },
 ]
 
 function PagosPage() {
@@ -105,19 +105,20 @@ function PagosPage() {
   }, [clientes])
 
   const filtrados = useMemo(() => {
-    const porResultado =
+    const porEstado =
       filtro === 'todas'
         ? pagos
-        : pagos.filter((pago) => pago.resultado === filtro)
+        : pagos.filter((pago) => pago.estado === filtro)
 
-    const porBusqueda = filtrarPorBusqueda(porResultado, busqueda, [
+    const porBusqueda = filtrarPorBusqueda(porEstado, busqueda, [
       (pago) => {
         const venta = ventas.find((v) => v.id === pago.ventaId)
         const cliente = venta ? clientesPorId.get(venta.clienteId) : null
         return cliente ? `${cliente.apellido} ${cliente.nombre}` : ''
       },
       'medioPago',
-      'resultado',
+      'estado',
+      (pago) => (pago.cuotas ? `${pago.cuotas} cuotas` : ''),
       (pago) => `#${pago.ventaId}`,
     ])
 
@@ -128,6 +129,9 @@ function PagosPage() {
     listarPagos()
       .then(setPagos)
       .catch((error) => toast.error(error.message))
+    listarVentas()
+      .then(setVentas)
+      .catch(() => {})
   }
 
   const { pagina, setPagina, totalPaginas, paginar } = usePaginacion(filtrados.length, `${filtro}-${busqueda}-${orden}`)
@@ -137,7 +141,7 @@ function PagosPage() {
     <div className="grid gap-4">
       <PageHeader
         titulo="Pagos"
-        descripcion="Registro interno del cobro de las ventas (pago simulado). Un RECHAZADO permite reintentar; el pago nunca toca stock."
+        descripcion="Cobros internos de ventas COMPLETADAS. Se admiten cobros parciales hasta cubrir el saldo; un cobro inválido no se registra y no existe RECHAZADO."
         acciones={
           <Button onClick={() => setRegistroAbierto(true)}>
             <Plus className="size-4" />
@@ -147,22 +151,22 @@ function PagosPage() {
       />
       <Card>
         <CardContent className="grid gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <Select value={filtro} onValueChange={setFiltro}>
                 <SelectTrigger
                   className="w-full sm:w-48"
-                  aria-label="Filtrar por resultado"
+                  aria-label="Filtrar por estado"
                 >
-                  <SelectValue placeholder="Resultado" />
+                  <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
-                  {RESULTADOS_FILTRO.map((resultadoFiltro) => (
+                  {ESTADOS_FILTRO.map((estadoFiltro) => (
                     <SelectItem
-                      key={resultadoFiltro.valor}
-                      value={resultadoFiltro.valor}
+                      key={estadoFiltro.valor}
+                      value={estadoFiltro.valor}
                     >
-                      {resultadoFiltro.label}
+                      {estadoFiltro.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -183,15 +187,15 @@ function PagosPage() {
               <TableRow>
                 <TableHeadOrdenable orden={orden} onOrdenChange={setOrden} campo="fecha">Fecha</TableHeadOrdenable>
                 <TableHead>Venta</TableHead>
-                <TableHead>Cliente</TableHead>
+                <TableHead className="hidden lg:table-cell">Cliente</TableHead>
                 <TableHead>Medio</TableHead>
-                <TableHead className="text-right">Monto</TableHead>
-                <TableHead>Resultado</TableHead>
+                <TableHead className="text-right">Monto final</TableHead>
+                <TableHead>Estado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {cargando ? (
-                <SkeletonTabla columnas={6} filas={3} />
+                <SkeletonTabla columnas={6} filas={3} ocultas={[2]} />
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">
@@ -215,7 +219,7 @@ function PagosPage() {
                       <EmptyState
                         icono={CreditCard}
                         titulo="No hay resultados"
-                        descripcion="Ningún pago coincide con el filtro de resultado."
+                        descripcion="Ningún pago coincide con el filtro de estado."
                         accion={{ label: 'Limpiar filtro', variant: 'outline' }}
                         onAccion={() => setFiltro('todas')}
                       />
@@ -228,6 +232,11 @@ function PagosPage() {
                   const cliente = venta
                     ? clientesPorId.get(venta.clienteId)
                     : null
+                  const montoFinal = pago.montoFinal ?? pago.monto
+                  const tieneAjustes =
+                    Number(pago.recargo) > 0 ||
+                    Number(pago.descuentoAplicado) > 0 ||
+                    montoFinal !== pago.monto
 
                   return (
                     <TableRow key={pago.id}>
@@ -235,19 +244,33 @@ function PagosPage() {
                       <TableCell className="font-medium">
                         #{pago.ventaId}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {cliente
                           ? `${cliente.apellido}, ${cliente.nombre}`
                           : '—'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {pago.medioPago}
+                      <TableCell>
+                        <p>{pago.medioPago}</p>
+                        {pago.cuotas && (
+                          <p className="text-xs text-muted-foreground">
+                            {pago.cuotas} cuotas
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
-                        {formatCurrency(pago.monto)}
+                        <p>{formatCurrency(montoFinal)}</p>
+                        {tieneAjustes && (
+                          <p className="text-xs text-muted-foreground">
+                            Base {formatCurrency(pago.monto)}
+                            {Number(pago.recargo) > 0 &&
+                              ` · recargo ${pago.recargo}%`}
+                            {Number(pago.descuentoAplicado) > 0 &&
+                              ` · desc. ${pago.descuentoAplicado}%`}
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={pago.resultado} />
+                        <StatusBadge status={pago.estado} />
                       </TableCell>
                     </TableRow>
                   )

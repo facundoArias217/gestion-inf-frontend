@@ -11,6 +11,50 @@ let ventas = VENTAS_MOCK.map((venta) => ({
   detalles: venta.detalles.map((detalle) => ({ ...detalle })),
 }))
 
+function redondear(valor) {
+  return Math.round((Number(valor) + Number.EPSILON) * 100) / 100
+}
+
+function totalDeVenta(venta) {
+  return redondear(
+    (venta.detalles ?? []).reduce(
+      (acum, detalle) => acum + detalle.cantidad * detalle.precioUnitario,
+      0,
+    ),
+  )
+}
+
+export function registrarVentaMock(datos) {
+  const ahora = new Date().toISOString()
+  const total = totalDeVenta(datos)
+  const nueva = {
+    ...datos,
+    id: ventas.length ? Math.max(...ventas.map((v) => v.id)) + 1 : 1,
+    total,
+    saldo: total,
+    estadoCobro: 'SIN_COBRAR',
+    createdAt: datos.createdAt ?? ahora,
+    updatedAt: ahora,
+  }
+  ventas.push(nueva)
+  return nueva
+}
+
+export function registrarCobroMock(ventaId, montoBase) {
+  const venta = ventas.find((v) => v.id === ventaId)
+  if (!venta) {
+    return
+  }
+
+  const total = venta.total ?? totalDeVenta(venta)
+  const saldoActual = venta.saldo ?? total
+  const saldo = Math.max(redondear(saldoActual - montoBase), 0)
+  venta.saldo = saldo
+  venta.estadoCobro =
+    saldo <= 0 ? 'COBRADA' : saldo < total ? 'PARCIAL' : 'SIN_COBRAR'
+  venta.updatedAt = new Date().toISOString()
+}
+
 function copiar(dato) {
   if (Array.isArray(dato)) {
     return dato.map((item) => ({ ...item }))
@@ -57,9 +101,7 @@ async function crearMock({ clienteId, fecha, detalles }) {
     precios[detalle.productoId] = producto.precio
   }
 
-  const ahora = new Date().toISOString()
-  const nueva = {
-    id: ventas.length ? Math.max(...ventas.map((v) => v.id)) + 1 : 1,
+  const nueva = registrarVentaMock({
     clienteId,
     fecha,
     estado: 'COMPLETADA',
@@ -69,10 +111,7 @@ async function crearMock({ clienteId, fecha, detalles }) {
       cantidad: detalle.cantidad,
       precioUnitario: precios[detalle.productoId],
     })),
-    createdAt: ahora,
-    updatedAt: ahora,
-  }
-  ventas.push(nueva)
+  })
   return conLatencia(nueva)
 }
 
@@ -85,7 +124,11 @@ function cancelarMock(id) {
     return errorConLatencia('Solo se puede cancelar una venta COMPLETADA')
   }
 
+  const total = venta.total ?? totalDeVenta(venta)
   venta.estado = 'CANCELADA'
+  venta.total = total
+  venta.saldo = total
+  venta.estadoCobro = 'SIN_COBRAR'
   venta.updatedAt = new Date().toISOString()
   return conLatencia(venta)
 }
