@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Copy, Eye, FileText, MoreHorizontal, Plus, Printer, ShoppingCart, XCircle } from 'lucide-react'
+import {
+  CheckCircle2,
+  Copy,
+  CreditCard,
+  Eye,
+  FileText,
+  MoreHorizontal,
+  Plus,
+  Printer,
+  ShoppingCart,
+  XCircle,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -38,6 +49,7 @@ import {
 } from '@/components/ui/table'
 import { listarArmados } from '@/features/armados/services'
 import { listarClientes } from '@/features/clientes/services'
+import PagoFormDialog from '@/features/pagos/components/pago-form-dialog'
 import { listarProductos } from '@/features/productos/services'
 import { useOrden, ordenarListado } from '@/hooks/use-orden'
 import { useDocumentTitle } from '@/hooks/use-document-title'
@@ -49,6 +61,7 @@ import ConvertirPresupuestoDialog from '../components/convertir-presupuesto-dial
 import RechazarPresupuestoDialog from '../components/rechazar-presupuesto-dialog'
 import {
   aceptarPresupuesto,
+  convertirPresupuesto,
   duplicarPresupuesto,
   listarPresupuestos,
 } from '../services'
@@ -109,6 +122,8 @@ function PresupuestosPage() {
   const [presupuestoDetalle, setPresupuestoDetalle] = useState(null)
   const [presupuestoRechazar, setPresupuestoRechazar] = useState(null)
   const [presupuestoConvertir, setPresupuestoConvertir] = useState(null)
+  const [ventaCobrar, setVentaCobrar] = useState(null)
+  const [procesandoId, setProcesandoId] = useState(null)
 
   useDocumentTitle('Presupuestos')
 
@@ -214,6 +229,24 @@ function PresupuestosPage() {
     }
   }
 
+  const aceptarYCobrar = async (presupuesto) => {
+    setProcesandoId(presupuesto.id)
+    try {
+      await aceptarPresupuesto(presupuesto.id)
+      const { venta } = await convertirPresupuesto(presupuesto.id)
+      toast.success(
+        `Presupuesto #${presupuesto.id} aceptado; venta #${venta.id} lista para cobrar`,
+      )
+      recargarPresupuestos()
+      setVentaCobrar(venta)
+    } catch (error) {
+      toast.error(error.message)
+      recargarPresupuestos()
+    } finally {
+      setProcesandoId(null)
+    }
+  }
+
   const duplicar = async (presupuesto) => {
     try {
       const nuevo = await duplicarPresupuesto(presupuesto.id)
@@ -233,7 +266,7 @@ function PresupuestosPage() {
     <div className="grid gap-4">
       <PageHeader
         titulo="Presupuestos"
-        descripcion="Cotizaciones para clientes con vencimiento y estados. La conversión en venta reverifica stock."
+        descripcion="Cotizaciones para clientes con vencimiento y estados. «Aceptar y cobrar» convierte en venta y abre el cobro; la conversión reverifica stock."
         acciones={
           <Button onClick={() => navigate('/presupuestos/nuevo')}>
             <Plus className="size-4" />
@@ -379,6 +412,14 @@ function PresupuestosPage() {
                             {pendienteVigente && (
                               <>
                                 <DropdownMenuItem
+                                  disabled={procesandoId === presupuesto.id}
+                                  onClick={() => aceptarYCobrar(presupuesto)}
+                                >
+                                  <CreditCard className="size-4" />
+                                  Aceptar y cobrar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={procesandoId === presupuesto.id}
                                   onClick={() => aceptar(presupuesto)}
                                 >
                                   <CheckCircle2 className="size-4" />
@@ -466,6 +507,19 @@ function PresupuestosPage() {
         }}
         presupuesto={presupuestoConvertir}
         onConvertido={recargarPresupuestos}
+        onVentaCreada={(venta) => setVentaCobrar(venta)}
+      />
+      <PagoFormDialog
+        open={ventaCobrar != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) {
+            setVentaCobrar(null)
+            recargarPresupuestos()
+          }
+        }}
+        venta={ventaCobrar}
+        clientes={clientes}
+        textoCancelar="Cobrar después"
       />
     </div>
   )

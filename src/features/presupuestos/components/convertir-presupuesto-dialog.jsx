@@ -23,6 +23,7 @@ function ConvertirPresupuestoDialog({
   onOpenChange,
   presupuesto,
   onConvertido,
+  onVentaCreada,
 }) {
   const [procesando, setProcesando] = useState(false)
 
@@ -37,6 +38,7 @@ function ConvertirPresupuestoDialog({
       )
       onOpenChange(false)
       onConvertido?.()
+      onVentaCreada?.(venta)
     } catch (error) {
       toast.error(error.message)
     } finally {

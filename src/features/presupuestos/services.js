@@ -4,6 +4,7 @@ import { PRESUPUESTOS_MOCK } from './mocks'
 import { listarClientes } from '../clientes/services'
 import { listarProductos } from '../productos/services'
 import { listarArmados } from '../armados/services'
+import { registrarVentaMock } from '../ventas/services'
 
 const LATENCIA_MOCK = 400
 
@@ -152,8 +153,7 @@ async function convertirMock(id) {
   }
 
   const ahora = new Date().toISOString()
-  const venta = {
-    id: Math.floor(Math.random() * 900) + 100,
+  const venta = registrarVentaMock({
     clienteId: presupuesto.clienteId,
     presupuestoId: presupuesto.id,
     fecha: hoy,
@@ -164,9 +164,7 @@ async function convertirMock(id) {
       cantidad: linea.cantidad,
       precioUnitario: linea.precioUnitario,
     })),
-    createdAt: ahora,
-    updatedAt: ahora,
-  }
+  })
 
   presupuesto.estado = 'CONVERTIDO'
   presupuesto.updatedAt = ahora
