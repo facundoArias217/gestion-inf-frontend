@@ -28,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Skeleton } from '@/components/ui/skeleton'
+import SkeletonTabla from '@/components/skeleton-tabla'
 import {
   Table,
   TableBody,
@@ -226,13 +226,7 @@ function ArmadosPage() {
             </TableHeader>
             <TableBody>
               {cargando ? (
-                [1, 2, 3, 4].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={6}>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                <SkeletonTabla columnas={6} />
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">

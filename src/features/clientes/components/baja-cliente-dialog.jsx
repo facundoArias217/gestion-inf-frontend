@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { bajarCliente } from '../services'
+import { bajarCliente, reactivarCliente } from '../services'
 
 function BajaClienteDialog({ open, onOpenChange, cliente, onBajaConfirmada }) {
   const [procesando, setProcesando] = useState(false)
@@ -22,6 +22,22 @@ function BajaClienteDialog({ open, onOpenChange, cliente, onBajaConfirmada }) {
       await bajarCliente(cliente.id)
       toast.success(
         `Cliente «${cliente.apellido}, ${cliente.nombre}» dado de baja`,
+        {
+          action: {
+            label: 'Deshacer',
+            onClick: async () => {
+              try {
+                await reactivarCliente(cliente.id)
+                toast.success(
+                  `Cliente «${cliente.apellido}, ${cliente.nombre}» reactivado`,
+                )
+                onBajaConfirmada?.()
+              } catch (error) {
+                toast.error(error.message)
+              }
+            },
+          },
+        },
       )
       onOpenChange(false)
       onBajaConfirmada?.()

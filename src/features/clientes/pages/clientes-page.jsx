@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Skeleton } from '@/components/ui/skeleton'
+import SkeletonTabla from '@/components/skeleton-tabla'
 import {
   Table,
   TableBody,
@@ -185,13 +185,7 @@ function ClientesPage() {
             </TableHeader>
             <TableBody>
               {cargando ? (
-                [1, 2, 3, 4].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={7}>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                <SkeletonTabla columnas={7} ocultas={[3, 4]} />
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="p-0">

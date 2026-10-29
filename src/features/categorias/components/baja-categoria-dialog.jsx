@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { bajarCategoria } from '../services'
+import { bajarCategoria, reactivarCategoria } from '../services'
 
 function BajaCategoriaDialog({ open, onOpenChange, categoria, onBajaConfirmada }) {
   const [procesando, setProcesando] = useState(false)
@@ -20,7 +20,20 @@ function BajaCategoriaDialog({ open, onOpenChange, categoria, onBajaConfirmada }
     setProcesando(true)
     try {
       await bajarCategoria(categoria.id)
-      toast.success(`Categoría «${categoria.nombre}» dada de baja`)
+      toast.success(`Categoría «${categoria.nombre}» dada de baja`, {
+        action: {
+          label: 'Deshacer',
+          onClick: async () => {
+            try {
+              await reactivarCategoria(categoria.id)
+              toast.success(`Categoría «${categoria.nombre}» reactivada`)
+              onBajaConfirmada?.()
+            } catch (error) {
+              toast.error(error.message)
+            }
+          },
+        },
+      })
       onOpenChange(false)
       onBajaConfirmada?.()
     } catch (error) {

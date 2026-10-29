@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { bajarProducto } from '../services'
+import { bajarProducto, reactivarProducto } from '../services'
 
 function BajaProductoDialog({
   open,
@@ -25,7 +25,20 @@ function BajaProductoDialog({
     setProcesando(true)
     try {
       await bajarProducto(producto.id)
-      toast.success(`Producto «${producto.nombre}» dado de baja`)
+      toast.success(`Producto «${producto.nombre}» dado de baja`, {
+        action: {
+          label: 'Deshacer',
+          onClick: async () => {
+            try {
+              await reactivarProducto(producto.id)
+              toast.success(`Producto «${producto.nombre}» reactivado`)
+              onBajaConfirmada?.()
+            } catch (error) {
+              toast.error(error.message)
+            }
+          },
+        },
+      })
       onOpenChange(false)
       onBajaConfirmada?.()
     } catch (error) {

@@ -20,7 +20,25 @@ function BajaUsuarioDialog({ open, onOpenChange, usuario, onBajaConfirmada }) {
     setProcesando(true)
     try {
       await cambiarEstadoUsuario(usuario.id, false)
-      toast.success(`Usuario ${usuario.apellido}, ${usuario.nombre} desactivado`)
+      toast.success(
+        `Usuario ${usuario.apellido}, ${usuario.nombre} desactivado`,
+        {
+          action: {
+            label: 'Deshacer',
+            onClick: async () => {
+              try {
+                await cambiarEstadoUsuario(usuario.id, true)
+                toast.success(
+                  `Usuario ${usuario.apellido}, ${usuario.nombre} reactivado`,
+                )
+                onBajaConfirmada?.()
+              } catch (error) {
+                toast.error(error.message)
+              }
+            },
+          },
+        },
+      )
       onOpenChange(false)
       onBajaConfirmada?.()
     } catch (error) {

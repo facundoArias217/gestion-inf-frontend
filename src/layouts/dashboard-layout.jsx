@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   ChevronDown,
@@ -208,7 +213,10 @@ function Navbar({ onAbrirMenu }) {
 function DashboardLayout() {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const { bienvenida, limpiarBienvenida } = useAuth()
+  const { pathname } = useLocation()
   const saludoMostrado = useRef(false)
+  const contenidoRef = useRef(null)
+  const primeraRuta = useRef(true)
 
   useEffect(() => {
     if (bienvenida && !saludoMostrado.current) {
@@ -218,12 +226,24 @@ function DashboardLayout() {
     }
   }, [bienvenida, limpiarBienvenida])
 
+  useEffect(() => {
+    if (primeraRuta.current) {
+      primeraRuta.current = false
+      return
+    }
+    contenidoRef.current?.focus()
+  }, [pathname])
+
   return (
     <div className="flex min-h-svh bg-muted/40 print:block print:bg-white print:min-h-0">
       <Sidebar abierto={menuAbierto} onCerrar={() => setMenuAbierto(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Navbar onAbrirMenu={() => setMenuAbierto(true)} />
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 print:p-0">
+        <main
+          ref={contenidoRef}
+          tabIndex={-1}
+          className="flex-1 p-3 focus:outline-none sm:p-4 lg:p-6 print:p-0"
+        >
           <Outlet />
         </main>
       </div>

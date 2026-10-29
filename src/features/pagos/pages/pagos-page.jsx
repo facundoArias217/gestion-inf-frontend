@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
+import SkeletonTabla from '@/components/skeleton-tabla'
 import {
   Table,
   TableBody,
@@ -191,13 +191,7 @@ function PagosPage() {
             </TableHeader>
             <TableBody>
               {cargando ? (
-                [1, 2, 3].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={6}>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                <SkeletonTabla columnas={6} filas={3} />
               ) : filtrados.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">

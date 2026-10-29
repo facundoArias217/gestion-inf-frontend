@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { bajarProveedor } from '../services'
+import { bajarProveedor, reactivarProveedor } from '../services'
 
 function BajaProveedorDialog({
   open,
@@ -25,7 +25,22 @@ function BajaProveedorDialog({
     setProcesando(true)
     try {
       await bajarProveedor(proveedor.id)
-      toast.success(`Proveedor «${proveedor.razonSocial}» dado de baja`)
+      toast.success(`Proveedor «${proveedor.razonSocial}» dado de baja`, {
+        action: {
+          label: 'Deshacer',
+          onClick: async () => {
+            try {
+              await reactivarProveedor(proveedor.id)
+              toast.success(
+                `Proveedor «${proveedor.razonSocial}» reactivado`,
+              )
+              onBajaConfirmada?.()
+            } catch (error) {
+              toast.error(error.message)
+            }
+          },
+        },
+      })
       onOpenChange(false)
       onBajaConfirmada?.()
     } catch (error) {

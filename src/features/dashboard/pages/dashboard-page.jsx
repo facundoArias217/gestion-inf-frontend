@@ -72,7 +72,11 @@ function DashboardPage() {
 
   if (cargando || !metricas) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        role="status"
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <span className="sr-only">Cargando métricas…</span>
         {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-32" />
         ))}
