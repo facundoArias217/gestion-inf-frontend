@@ -17,6 +17,7 @@ import {
   Moon,
   Package,
   PackagePlus,
+  Settings,
   ShoppingCart,
   Sun,
   Tags,
@@ -44,6 +45,7 @@ const MENU = [
     titulo: 'General',
     items: [
       { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, roles: ['ADMIN'] },
+      { label: 'Configuración', to: '/configuracion', icon: Settings, roles: ['ADMIN'] },
     ],
   },
   {

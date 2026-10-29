@@ -22,7 +22,7 @@ src/
 ├── hooks/           (use-auth.js)
 ├── layouts/         (dashboard-layout.jsx: shell del panel con menú por rol)
 ├── lib/             (api.js: cliente HTTP; format.js: fechas y moneda)
-└── features/        (12 módulos = pantallas del BRD)
+└── features/        (13 módulos = pantallas del BRD)
     ├── auth/        (Login — RF-AUT-01)
     ├── dashboard/   (RF-DSH-01, admin)
     ├── productos/   (RF-PRO-01/02/03, admin)
@@ -34,7 +34,8 @@ src/
     ├── presupuestos/(RF-PRE-01/02/03, vendedor)
     ├── armados/     (RF-ARM-01/02, vendedor)
     ├── pagos/       (RF-PAG-01/02, vendedor)
-    └── usuarios/    (RF-USR-01, admin)
+    ├── usuarios/    (RF-USR-01, admin)
+    └── configuracion/(RF-CFG-01, admin)
 ```
 
 Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (componentes propios del módulo) y `services.js` (llamadas a la API del módulo).
@@ -58,13 +59,13 @@ Cada feature contiene: `pages/` (listado, detalle/edición), `components/` (comp
 - `isIntegrated` valida el nombre contra la lista de módulos válidos y lanza un error si es desconocido, para que un typo no deje el módulo en mock silenciosamente.
 - El Set de módulos integrados arranca **vacío**: ningún módulo va contra la API real hasta que el backend la exponga. `auth` quedó integrado en su tarjeta 1.3 (login y `/me` con JWT real); el resto se agrega en el commit de su tarjeta de Integración.
 - Integrar un módulo = agregarlo al Set de `integration.js` (una línea, en el commit de su tarjeta de Integración). Los `mocks.js` **se conservan** después de integrar: sirven para demos offline; no se eliminan al integrar.
-- Al completar la migración de los 12 módulos, evaluar eliminar la indirección (`integration.js` y ramas mock) en un commit final.
+- Al completar la migración de los 13 módulos, evaluar eliminar la indirección (`integration.js` y ramas mock) en un commit final.
 - Los mocks respetan el contrato de API (shapes y status codes): ver la skill `reglas-de-negocio` del repo backend y el contrato de la colección Postman.
 
 ## Reglas para trabajar acá
 
 - Estructura **por features**: al agregar pantallas o funcionalidades, crear dentro de `src/features/<modulo>/`, no carpetas de tipo archivo globales.
-- Roles según el BRD: dashboard, proveedores, compras y usuarios → Administrador; clientes, presupuestos, armados (Armá tu PC), ventas y pagos → Vendedor; productos y categorías → ambos roles (el Vendedor en solo-lectura para armar ventas, el Administrador gestiona). Los guards por rol se resuelven en `src/app/guards.jsx` con `useAuth`.
+- Roles según el BRD: dashboard, proveedores, compras, usuarios y configuración → Administrador; clientes, presupuestos, armados (Armá tu PC), ventas y pagos → Vendedor; productos y categorías → ambos roles (el Vendedor en solo-lectura para armar ventas, el Administrador gestiona). Los guards por rol se resuelven en `src/app/guards.jsx` con `useAuth`.
 - No commitear secretos; las variables de entorno se leen con `import.meta.env` (referencia: `VITE_API_URL`).
 - Antes de entregar: correr `npm run lint` y `npm run build`.
 - **Informe de ejecución por tarjeta:** cada tarjeta [FE-mock]/[Int] ejecutada incluye un `docs/informe-<tarjeta>.md` con: tarjeta, fecha, alcance, decisiones tomadas, verificación, checklist manual. El informe va en el mismo commit de la tarjeta. No incluir flujo git en el informe. La convención rige desde la tarjeta 8.3; las tarjetas anteriores (1.x–7.x) no llevan informe retroactivo (sus decisiones están backfilladas en la skill `reglas-de-negocio` del repo backend).

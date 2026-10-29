@@ -9,6 +9,7 @@ import CategoriasPage from '../features/categorias/pages/categorias-page'
 import ClientesPage from '../features/clientes/pages/clientes-page'
 import ComprasPage from '../features/compras/pages/compras-page'
 import CompraRegistroPage from '../features/compras/pages/compra-registro-page'
+import ConfiguracionPage from '../features/configuracion/pages/configuracion-page'
 import PagosPage from '../features/pagos/pages/pagos-page'
 import ProductosPage from '../features/productos/pages/productos-page'
 import ProveedoresPage from '../features/proveedores/pages/proveedores-page'
@@ -172,6 +173,14 @@ export default function Router() {
             element={
               <RequireRole roles={['ADMIN']}>
                 <UsuariosPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="configuracion"
+            element={
+              <RequireRole roles={['ADMIN']}>
+                <ConfiguracionPage />
               </RequireRole>
             }
           />
